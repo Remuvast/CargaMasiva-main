@@ -72,6 +72,7 @@ public class ExcelRowValidator {
 
         // ================= VALIDACIÓN DE FECHAS =================
 
+        // 🔥 FECHAS DE ESTUDIO
         Timestamp inicioEst = parseTimestamp(fechaInicioEstudios);
         Timestamp finEst = parseTimestamp(fechaFinEstudios);
 
@@ -80,6 +81,20 @@ public class ExcelRowValidator {
                 errores.add(new ValidationError(
                         rowIndex,
                         "Fechas estudios",
+                        "La fecha fin debe ser mayor que la fecha inicio"
+                ));
+            }
+        }
+
+        // 🔥 FECHAS DE FINANCIAMIENTO
+        Timestamp inicioFinTs = parseTimestamp(fechaInicioFin);
+        Timestamp finFinTs = parseTimestamp(fechaFinFin);
+
+        if (inicioFinTs != null && finFinTs != null) {
+            if (!finFinTs.after(inicioFinTs)) {
+                errores.add(new ValidationError(
+                        rowIndex,
+                        "Fechas financiamiento",
                         "La fecha fin debe ser mayor que la fecha inicio"
                 ));
             }
@@ -98,7 +113,7 @@ public class ExcelRowValidator {
 
     private static void validarNumero(List<ValidationError> errores, Long valor, int fila, String campo) {
         if (valor == null || valor == 0) {
-            errores.add(new ValidationError(fila, campo, "Es obligatorio o inválido"));
+            errores.add(new ValidationError(fila, campo, "Es obligatorio o tiene datos inválidos"));
         }
     }
 

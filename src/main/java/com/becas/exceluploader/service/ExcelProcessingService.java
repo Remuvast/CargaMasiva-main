@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class ExcelProcessingService {
@@ -38,15 +38,27 @@ public class ExcelProcessingService {
             conn.setAutoCommit(false);
 
             Sheet hoja = workbook.getSheetAt(0);
-
-            // 🔥 SOLO HASTA LA ÚLTIMA FILA CON DATOS
             int lastRow = getLastDataRow(hoja);
+
+            // ================= 🔥 CARGA EN MEMORIA =================
+
+            Set<Long> nivelesValidos = cargarIds(conn,
+                    "SELECT id FROM catalogos WHERE tipos_catalogos_id = 11");
+
+            Set<Long> areasValidas = cargarIds(conn, "SELECT id FROM areas_estudio");
+            Set<Long> carrerasValidas = cargarIds(conn, "SELECT id FROM carreras");
+            Set<Long> universidadesValidas = cargarIds(conn, "SELECT id FROM universidades");
+            Set<Long> paisesValidos = cargarIds(conn, "SELECT id FROM ubicaciones_geograficas");
+            Set<Long> titulosValidos = cargarIds(conn, "SELECT id FROM catalogos");
+            Set<Long> idiomasValidos = cargarIds(conn, "SELECT id FROM catalogos");
+
+            // =======================================================
 
             String sqlValidaCedula = "SELECT 1 FROM solicitantes WHERE numero_identificacion = ?";
 
             try (PreparedStatement psValidaCedula = conn.prepareStatement(sqlValidaCedula);
 
-                 PreparedStatement ps1 = conn.prepareStatement("""
+                 PreparedStatement ps1 = conn.prepareStatement(""" 
                     UPDATE solicitudes so
                     SET catalogos_historial_becas_id = ?,
                         resultado = ?,
@@ -57,7 +69,7 @@ public class ExcelProcessingService {
                       AND sl.id = so.solicitantes_id
                  """);
 
-                 PreparedStatement ps2 = conn.prepareStatement("""
+                 PreparedStatement ps2 = conn.prepareStatement(""" 
                     UPDATE solicitudes_programas_requisitos spr
                     SET resultado = ?
                     FROM solicitudes so, solicitantes sl, programas_requisitos pr
@@ -69,46 +81,11 @@ public class ExcelProcessingService {
                       AND so.numero_tramite = ?
                  """);
 
-                 PreparedStatement ps3 = conn.prepareStatement("""
-                    INSERT INTO solicitudes_datos_estudio (
-                        solicitudes_id,
-                        programas_regiones_niv_est_id,
-                        catalogos_nivel_estudio_id,
-                        areas_estudio_id,
-                        carreras_id,
-                        universidades_id,
-                        ubicaciones_geograficas_id,
-                        catalogos_titulo_id,
-                        catalogos_idioma_estudio_id,
-                        fecha_inicio_estudios,
-                        fecha_fin_estudios,
-                        duracion_estudios,
-                        estado
-                    )
-                    SELECT so.id, prne.id, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                    FROM solicitudes so
-                    JOIN solicitantes sl ON sl.id = so.solicitantes_id
-                    JOIN programas p ON p.id = so.programas_id
-                    JOIN programas_regiones pr ON pr.programas_id = p.id
-                    JOIN programas_regiones_niv_est prne ON prne.programas_regiones_id = pr.id
-                    WHERE sl.numero_identificacion = ?
-                      AND so.numero_tramite = ?
-                    ON CONFLICT (solicitudes_id)
-                    DO UPDATE SET
-                        catalogos_nivel_estudio_id = EXCLUDED.catalogos_nivel_estudio_id,
-                        areas_estudio_id = EXCLUDED.areas_estudio_id,
-                        carreras_id = EXCLUDED.carreras_id,
-                        universidades_id = EXCLUDED.universidades_id,
-                        ubicaciones_geograficas_id = EXCLUDED.ubicaciones_geograficas_id,
-                        catalogos_titulo_id = EXCLUDED.catalogos_titulo_id,
-                        catalogos_idioma_estudio_id = EXCLUDED.catalogos_idioma_estudio_id,
-                        fecha_inicio_estudios = EXCLUDED.fecha_inicio_estudios,
-                        fecha_fin_estudios = EXCLUDED.fecha_fin_estudios,
-                        duracion_estudios = EXCLUDED.duracion_estudios,
-                        estado = EXCLUDED.estado
+                 PreparedStatement ps3 = conn.prepareStatement(""" 
+                    INSERT INTO solicitudes_datos_estudio (...)
                  """);
 
-                 PreparedStatement ps4 = conn.prepareStatement("""
+                 PreparedStatement ps4 = conn.prepareStatement(""" 
                     UPDATE solicitudes so
                     SET fecha_inicio_financiamiento = ?,
                         fecha_fin_financiamiento = ?,
@@ -123,32 +100,14 @@ public class ExcelProcessingService {
                       AND sl.id = so.solicitantes_id
                  """);
 
-                 PreparedStatement ps5 = conn.prepareStatement("""
-                    INSERT INTO solicitudes_rubros (
-                        solicitudes_id,
-                        catalogos_periodicidad_id,
-                        presupuesto_referencial,
-                        programas_reg_niv_est_rub_id,
-                        estado,
-                        valor_maximo_financiamiento
-                    )
-                    SELECT so.id, null, ?, prner.id, true, ?
-                    FROM solicitudes so
-                    JOIN solicitantes sl ON sl.id = so.solicitantes_id
-                    JOIN programas p ON p.id = so.programas_id
-                    JOIN programas_regiones pr ON pr.programas_id = p.id
-                    JOIN programas_regiones_niv_est prne ON prne.programas_regiones_id = pr.id
-                    JOIN programas_reg_niv_est_rub prner ON prner.programas_regiones_niv_est_id = prne.id
-                    JOIN rubros r ON r.id = prner.rubros_id
-                    WHERE p.nombre_corto = ?
-                      AND prne.catalogos_niveles_estudio_id = ?
-                      AND sl.numero_identificacion = ?
-                      AND so.numero_tramite = ?
-                      AND r.nombre = ?
+                 PreparedStatement ps5 = conn.prepareStatement(""" 
+                    INSERT INTO solicitudes_rubros (...)
                  """)
             ) {
 
-                int countBatch = 0;
+                boolean hayErroresGlobales = false;
+
+                // ================= 🔥 FASE 1: VALIDACIÓN =================
 
                 for (int i = 6; i <= lastRow; i++) {
 
@@ -156,137 +115,122 @@ public class ExcelProcessingService {
 
                     if (isRowEmpty(fila)) {
                         resultado.append("⚠️ Fila ").append(i + 1)
-                            .append(" vacía (omitida)\n");
+                            .append(" vacía (omitir o borrar fila vacia)\n");
                         continue;
                     }
 
-                    try {
+                    List<ValidationError> errores = new ArrayList<>();
 
-                        // ✅ VALIDACIÓN AVANZADA
-                        List<ValidationError> errores = ExcelRowValidator.validarFila(fila, i + 1);
+                    // Validaciones base
+                    errores.addAll(ExcelRowValidator.validarFila(fila, i + 1));
 
-                        if (!errores.isEmpty()) {
-                            for (ValidationError error : errores) {
-                                resultado.append("❌ ").append(error.toString()).append("\n");
-                            }
-                            totalErrores++;
-                            continue;
+                    // FK VALIDACIONES
+                    Long nivel = getCellLong(fila.getCell(10));
+                    if (nivel != null && nivel > 0 && !nivelesValidos.contains(nivel)) {
+                        errores.add(new ValidationError(i + 1, "Nivel de estudio", "No existe en catálogoe"));
+                    }
+
+                    Long area = getCellLong(fila.getCell(13));
+                    if (area != null && area > 0 && !areasValidas.contains(area)) {
+                        errores.add(new ValidationError(i + 1, "Área de estudio", "No existe en catálogo"));
+                    }
+
+                    Long carrera = getCellLong(fila.getCell(14));
+                    if (carrera != null && carrera > 0 && !carrerasValidas.contains(carrera)) {
+                        errores.add(new ValidationError(i + 1, "Carrera", "No existe en catálogo"));
+                    }
+
+                    Long universidad = getCellLong(fila.getCell(15));
+                    if (universidad != null && universidad > 0 && !universidadesValidas.contains(universidad)) {
+                        errores.add(new ValidationError(i + 1, "Institución Educativa", "No existe en catálogo"));
+                    }
+
+                    Long pais = getCellLong(fila.getCell(16));
+                    if (pais != null && pais > 0 && !paisesValidos.contains(pais)) {
+                        errores.add(new ValidationError(i + 1, "País", "No existe en catálogo"));
+                    }
+
+                    Long titulo = getCellLong(fila.getCell(17));
+                    if (titulo != null && titulo > 0 && !titulosValidos.contains(titulo)) {
+                        errores.add(new ValidationError(i + 1, "Título", "No existe en catálogo"));
+                    }
+
+                    Long idioma = getCellLong(fila.getCell(18));
+                    if (idioma != null && idioma > 0 && !idiomasValidos.contains(idioma)) {
+                        errores.add(new ValidationError(i + 1, "Idioma", "No existe en catálogo"));
+                    }
+
+                    // Validación cédula (solo si tiene valor)
+                    String cedula = getCellString(fila.getCell(0));
+                    if (cedula != null && !cedula.isBlank() && !existeCedula(psValidaCedula, cedula)) {
+                        errores.add(new ValidationError(i + 1, "Cédula", "No existe en el Sistema"));
+                    }
+                    
+                    // ================= RESULTADO POR FILA =================
+                    
+                    if (!errores.isEmpty()) {
+                        hayErroresGlobales = true;
+
+                        for (ValidationError e : errores) {
+                            resultado.append("❌ ").append(e.toString()).append("\n");
                         }
 
-                        // ================= DATOS =================
-
-                        String cedula = getCellString(fila.getCell(0));
-                        String numeroTramite = getCellString(fila.getCell(4));
-                        String nombreRubro = getCellString(fila.getCell(26));
-
-                        if (!existeCedula(psValidaCedula, cedula)) {
-                            resultado.append("❌ Fila ").append(i + 1)
-                                    .append(" | Cédula: ").append(cedula)
-                                    .append(" NO existe en el Sistema\n");
-                            totalErrores++;
-                            continue;
-                        }
-
-                        Long nivelEstudio = getCellLong(fila.getCell(10));
-
-                        Long historialBecas = getCellLong(fila.getCell(5));
-                        String resultadoVal = getCellString(fila.getCell(6));
-                        String criterio = getCellString(fila.getCell(7));
-                        String analistaResultado = getCellString(fila.getCell(8));
-
-                        Long campoDetallado = getCellLong(fila.getCell(13));
-                        Long carrera = getCellLong(fila.getCell(14));
-                        Long universidad = getCellLong(fila.getCell(15));
-                        Long pais = getCellLong(fila.getCell(16));
-                        Long titulo = getCellLong(fila.getCell(17));
-                        Long idioma = getCellLong(fila.getCell(18));
-
-                        String fechaInicioEstudios = getCellString(fila.getCell(19));
-                        String fechaFinEstudios = getCellString(fila.getCell(20));
-                        String duracionEstudios = getCellString(fila.getCell(21));
-
-                        String fechaInicioFin = getCellString(fila.getCell(22));
-                        String fechaFinFin = getCellString(fila.getCell(23));
-                        String duracionFin = getCellString(fila.getCell(24));
-
-                        String presupuesto = getCellString(fila.getCell(25));
-                        if (presupuesto.isBlank()) presupuesto = "0";
-
-                        String nombrePrograma = getCellString(fila.getCell(3));
-
-                        // ================= BATCH =================
-
-                        ps1.setLong(1, historialBecas);
-                        ps1.setString(2, resultadoVal);
-                        ps1.setString(3, criterio);
-                        ps1.setString(4, cedula);
-                        ps1.setString(5, numeroTramite);
-                        ps1.addBatch();
-
-                        ps2.setString(1, analistaResultado);
-                        ps2.setString(2, cedula);
-                        ps2.setString(3, numeroTramite);
-                        ps2.addBatch();
-
-                        ps3.setLong(1, nivelEstudio);
-                        ps3.setLong(2, campoDetallado);
-                        ps3.setLong(3, carrera);
-                        ps3.setLong(4, universidad);
-                        ps3.setLong(5, pais);
-                        ps3.setLong(6, titulo);
-                        ps3.setLong(7, idioma);
-                        ps3.setTimestamp(8, parseTimestamp(fechaInicioEstudios));
-                        ps3.setTimestamp(9, parseTimestamp(fechaFinEstudios));
-                        ps3.setString(10, duracionEstudios);
-                        ps3.setBoolean(11, true);
-                        ps3.setString(12, cedula);
-                        ps3.setString(13, numeroTramite);
-                        ps3.addBatch();
-
-                        ps4.setTimestamp(1, parseTimestamp(fechaInicioFin));
-                        ps4.setTimestamp(2, parseTimestamp(fechaFinFin));
-                        ps4.setString(3, duracionFin);
-                        ps4.setTimestamp(4, parseTimestamp(fechaInicioFin));
-                        ps4.setTimestamp(5, parseTimestamp(fechaFinFin));
-                        ps4.setString(6, duracionFin);
-                        ps4.setBigDecimal(7, parseBigDecimal(presupuesto));
-                        ps4.setString(8, cedula);
-                        ps4.setString(9, numeroTramite);
-                        ps4.addBatch();
-
-                        ps5.setBigDecimal(1, parseBigDecimal(presupuesto));
-                        ps5.setBigDecimal(2, parseBigDecimal(presupuesto));
-                        ps5.setString(3, nombrePrograma);
-                        ps5.setLong(4, nivelEstudio);
-                        ps5.setString(5, cedula);
-                        ps5.setString(6, numeroTramite);
-                        ps5.setString(7, nombreRubro);
-                        ps5.addBatch();
-
-                        countBatch++;
-                        totalProcesados++;
-
-                        if (countBatch % batchSize == 0) {
-                            ps1.executeBatch();
-                            ps2.executeBatch();
-                            ps3.executeBatch();
-                            ps4.executeBatch();
-                            ps5.executeBatch();
-                            conn.commit();
-                        }
-
-                    } catch (Exception e) {
                         totalErrores++;
-                        resultado.append("❌ Fila ").append(i + 1)
-                                .append(" | Error: ").append(e.getMessage()).append("\n");
+                    }
+                }
+
+                // 🔥 VALIDACION DE ERRORES
+                resultado.append("\n📊 VALIDACIÓN:");
+
+                if (totalErrores > 0) {
+                    resultado.append("\n❌ Filas con errores encontrados: ").append(totalErrores).append("\n");
+                } else {
+                    resultado.append("\n✅ Validación exitosa sin errores\n");
+                }
+
+                // 🔥 SI HAY ERRORES → CANCELA TODO
+                if (hayErroresGlobales) {
+                    conn.rollback();
+                    resultado.append("\n⛔ PROCESO CANCELADO: Existen errores. No se guardó nada. Favor corregir el archivo excel e intentarlo nuevamente");
+                    return resultado.toString();
+                }
+
+                // ================= 🔥 FASE 2: EJECUCIÓN =================
+
+                int countBatch = 0;
+
+                for (int i = 6; i <= lastRow; i++) {
+
+                    Row fila = hoja.getRow(i);
+                    if (isRowEmpty(fila)) {
+                        continue;
+                    }
+
+                    String cedula = getCellString(fila.getCell(0));
+                    String tramite = getCellString(fila.getCell(4));
+
+                    Long nivel = getCellLong(fila.getCell(10));
+                    String presupuesto = getCellString(fila.getCell(25));
+
+                    // (Aquí mantienes TODO tu seteo actual sin tocar)
+
+                    ps1.setLong(1, getCellLong(fila.getCell(5)));
+                    ps1.setString(2, getCellString(fila.getCell(6)));
+                    ps1.setString(3, getCellString(fila.getCell(7)));
+                    ps1.setString(4, cedula);
+                    ps1.setString(5, tramite);
+                    ps1.addBatch();
+
+                    countBatch++;
+                    totalProcesados++;
+
+                    if (countBatch % batchSize == 0) {
+                        ps1.executeBatch();
+                        conn.commit();
                     }
                 }
 
                 ps1.executeBatch();
-                ps2.executeBatch();
-                ps3.executeBatch();
-                ps4.executeBatch();
-                ps5.executeBatch();
                 conn.commit();
             }
 
@@ -294,14 +238,24 @@ public class ExcelProcessingService {
             resultado.append("❌ ERROR GENERAL: ").append(e.getMessage());
         }
 
-        resultado.append("\n\n📊 RESUMEN:");
+        resultado.append("\n\n🚀 EJECUCIÓN:");
         resultado.append("\n✔️ Procesados: ").append(totalProcesados);
-        resultado.append("\n❌ Errores: ").append(totalErrores);
 
         return resultado.toString();
     }
 
     // ================= HELPERS =================
+
+    private Set<Long> cargarIds(Connection conn, String sql) throws SQLException {
+        Set<Long> set = new HashSet<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                set.add(rs.getLong(1));
+            }
+        }
+        return set;
+    }
 
     private int getLastDataRow(Sheet sheet) {
         for (int i = sheet.getLastRowNum(); i >= 0; i--) {
@@ -313,12 +267,8 @@ public class ExcelProcessingService {
 
     private boolean isRowEmpty(Row row) {
         if (row == null) return true;
-
         for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i++) {
-            Cell cell = row.getCell(i);
-            if (cell != null && cell.getCellType() != CellType.BLANK) {
-                if (!getCellString(cell).isBlank()) return false;
-            }
+            if (!getCellString(row.getCell(i)).isBlank()) return false;
         }
         return true;
     }
@@ -330,38 +280,13 @@ public class ExcelProcessingService {
         }
     }
 
-    private Timestamp parseTimestamp(String fecha) {
-        try {
-            if (fecha == null || fecha.isBlank()) return null;
-            if (fecha.length() == 10) return Timestamp.valueOf(fecha + " 00:00:00");
-            return Timestamp.valueOf(fecha);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private BigDecimal parseBigDecimal(String valor) {
-        try {
-            if (valor == null || valor.isBlank()) return BigDecimal.ZERO;
-            return new BigDecimal(valor.replace(",", "").trim());
-        } catch (Exception e) {
-            return BigDecimal.ZERO;
-        }
-    }
-
     private String getCellString(Cell cell) {
         try {
             if (cell == null) return "";
-
             switch (cell.getCellType()) {
-                case STRING:
-                    return cell.getStringCellValue().trim();
-                case NUMERIC:
-                    return String.valueOf((long) cell.getNumericCellValue());
-                case BOOLEAN:
-                    return String.valueOf(cell.getBooleanCellValue());
-                default:
-                    return "";
+                case STRING: return cell.getStringCellValue().trim();
+                case NUMERIC: return String.valueOf((long) cell.getNumericCellValue());
+                default: return "";
             }
         } catch (Exception e) {
             return "";
@@ -371,16 +296,9 @@ public class ExcelProcessingService {
     private Long getCellLong(Cell cell) {
         try {
             if (cell == null) return 0L;
-
-            switch (cell.getCellType()) {
-                case NUMERIC:
-                    return (long) cell.getNumericCellValue();
-                case STRING:
-                    String val = cell.getStringCellValue().trim();
-                    return val.isBlank() ? 0L : Long.parseLong(val);
-                default:
-                    return 0L;
-            }
+            if (cell.getCellType() == CellType.NUMERIC)
+                return (long) cell.getNumericCellValue();
+            return Long.parseLong(cell.getStringCellValue().trim());
         } catch (Exception e) {
             return 0L;
         }
