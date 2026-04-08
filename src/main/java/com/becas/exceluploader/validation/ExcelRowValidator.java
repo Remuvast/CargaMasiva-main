@@ -70,6 +70,44 @@ public class ExcelRowValidator {
         validarTexto(errores, presupuesto, rowIndex, "Presupuesto");
         validarTexto(errores, rubro, rowIndex, "Rubro");
 
+        // ================= VALIDACIÓN HISTORIAL BECAS Y RESULTADO =================
+        
+        // VALIDACIÓN RESULTADO (solo N o P)
+        if (resultado != null && !resultado.isBlank()) {
+            if (!resultado.equalsIgnoreCase("N") && !resultado.equalsIgnoreCase("P")) {
+                errores.add(new ValidationError(
+                        rowIndex,
+                        "Resultado",
+                        "Solo permite valores: N o P"
+             ));
+            }
+        }
+        // FIN VALIDACIÓN RESULTADO
+
+        // VALIDACIÓN HISTORIAL BECAS (solo 970, 971, 972)
+        if (historialBecas != null && historialBecas > 0) {
+            if (historialBecas != 970 && historialBecas != 971 && historialBecas != 972) {
+                errores.add(new ValidationError(
+                        rowIndex,
+                        "Historial Becas",
+                        "Solo permite valores: 970, 971, 972"
+                ));
+            }
+        }
+        // FIN VALIDACIÓN HISTORIAL BECAS
+
+        // VALIDACIÓN ANALISTA REQUISITOS (solo A o N)
+        if (analista != null && !analista.isBlank()) {
+            if (!analista.equalsIgnoreCase("A") && !analista.equalsIgnoreCase("N")) {
+                errores.add(new ValidationError(
+                        rowIndex,
+                        "Analista",
+                        "Solo permite valores: A o N"
+                ));
+            }
+        }
+        // FIN VALIDACIÓN ANALISTA REQUISITOS
+
         // ================= VALIDACIÓN DE FECHAS =================
 
         // 🔥 FECHAS DE ESTUDIO
