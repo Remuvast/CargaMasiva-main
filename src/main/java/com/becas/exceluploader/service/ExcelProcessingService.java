@@ -188,6 +188,72 @@ public class ExcelProcessingService {
                     // Validaciones base
                     errores.addAll(ExcelRowValidator.validarFila(fila, i + 1));
 
+                    // ================= VALIDACIÓN FECHAS ESTUDIO Y DURACION =================
+
+                    String fechaInicioEstudios = getCellString(fila.getCell(19));
+                    String fechaFinEstudios = getCellString(fila.getCell(20));
+                    String duracionEstudios = getCellString(fila.getCell(21));
+
+                    // ---- Fecha inicio ----
+                    if (fechaInicioEstudios == null || fechaInicioEstudios.isBlank()) {
+                        errores.add(new ValidationError(i + 1, "Fecha inicio estudios", "Es obligatoria"));
+                    } else {
+                        try {
+                            parseTimestamp(fechaInicioEstudios);
+                        } catch (Exception e) {
+                            errores.add(new ValidationError(i + 1, "Fecha inicio estudios", "Formato inválido (yyyy-MM-dd)"));
+                        }
+                    }
+
+                    // ---- Fecha fin ----
+                    if (fechaFinEstudios == null || fechaFinEstudios.isBlank()) {
+                        errores.add(new ValidationError(i + 1, "Fecha fin estudios", "Es obligatoria"));
+                    } else {
+                        try {
+                            parseTimestamp(fechaFinEstudios);
+                        } catch (Exception e) {
+                            errores.add(new ValidationError(i + 1, "Fecha fin estudios", "Formato inválido (yyyy-MM-dd)"));
+                        }
+                    }
+
+                    // ---- Duración ----
+                    if (duracionEstudios == null || duracionEstudios.isBlank()) {
+                        errores.add(new ValidationError(i + 1, "Duración estudios", "Es obligatoria"));
+                    }
+
+                    // ================= VALIDACIÓN FECHAS FINANCIAMIENTO Y DURACION =================
+
+                    String fechaInicioFin = getCellString(fila.getCell(22));
+                    String fechaFinFin = getCellString(fila.getCell(23));
+                    String duracionFin = getCellString(fila.getCell(24));
+
+                    // ---- Fecha inicio financiamiento ----
+                    if (fechaInicioFin == null || fechaInicioFin.isBlank()) {
+                        errores.add(new ValidationError(i + 1, "Fecha inicio financiamiento", "Es obligatoria"));
+                    } else {
+                        try {
+                            parseTimestamp(fechaInicioFin);
+                        } catch (Exception e) {
+                            errores.add(new ValidationError(i + 1, "Fecha inicio financiamiento", "Formato inválido (yyyy-MM-dd)"));
+                        }
+                    }
+
+                    // ---- Fecha fin financiamiento ----
+                    if (fechaFinFin == null || fechaFinFin.isBlank()) {
+                        errores.add(new ValidationError(i + 1, "Fecha fin financiamiento", "Es obligatoria"));
+                    } else {
+                        try {
+                            parseTimestamp(fechaFinFin);
+                        } catch (Exception e) {
+                            errores.add(new ValidationError(i + 1, "Fecha fin financiamiento", "Formato inválido (yyyy-MM-dd)"));
+                        }
+                    }
+
+                    // ---- Duración financiamiento ----
+                    if (duracionFin == null || duracionFin.isBlank()) {
+                        errores.add(new ValidationError(i + 1, "Duración financiamiento", "Es obligatoria"));
+                    }
+
                     // ================= VALIDACIÓN PRESUPUESTO =================
                     String presupuestoStr = getCellString(fila.getCell(25));
 
@@ -201,7 +267,7 @@ public class ExcelProcessingService {
 
                         String normalizado = presupuestoStr.trim();
 
-                        // Normalización (igual que tu método)
+                        // Normalización (igual que en el método)
                         if (normalizado.contains(",") && !normalizado.contains(".")) {
                             normalizado = normalizado.replace(",", ".");
                         }
@@ -336,6 +402,14 @@ public class ExcelProcessingService {
                     Long pais = getCellLong(fila.getCell(16));
                     Long titulo = getCellLong(fila.getCell(17));
                     Long idioma = getCellLong(fila.getCell(18));
+                    
+                    String fechaInicioEstudios = getCellString(fila.getCell(19));
+                    String fechaFinEstudios = getCellString(fila.getCell(20));
+                    String duracionEstudios = getCellString(fila.getCell(21));
+
+                    String fechaInicioFin = getCellString(fila.getCell(22));
+                    String fechaFinFin = getCellString(fila.getCell(23));
+                    String duracionFin = getCellString(fila.getCell(24));
 
                     String presupuesto = getCellString(fila.getCell(25));
                     if (presupuesto.isBlank()) presupuesto = "0";
@@ -362,21 +436,21 @@ public class ExcelProcessingService {
                     ps3.setLong(5, pais);
                     ps3.setLong(6, titulo);
                     ps3.setLong(7, idioma);
-                    ps3.setTimestamp(8, null);
-                    ps3.setTimestamp(9, null);
-                    ps3.setString(10, "");
+                    ps3.setTimestamp(8, parseTimestamp(fechaInicioEstudios));
+                    ps3.setTimestamp(9, parseTimestamp(fechaFinEstudios));
+                    ps3.setString(10, duracionEstudios);
                     ps3.setBoolean(11, true);
                     ps3.setString(12, cedula);
                     ps3.setString(13, tramite);
                     ps3.addBatch();
 
                     // ps4
-                    ps4.setTimestamp(1, null);
-                    ps4.setTimestamp(2, null);
-                    ps4.setString(3, "");
-                    ps4.setTimestamp(4, null);
-                    ps4.setTimestamp(5, null);
-                    ps4.setString(6, "");
+                    ps4.setTimestamp(1, parseTimestamp(fechaInicioFin));
+                    ps4.setTimestamp(2, parseTimestamp(fechaFinFin));
+                    ps4.setString(3, duracionFin);
+                    ps4.setTimestamp(4, parseTimestamp(fechaInicioFin));
+                    ps4.setTimestamp(5, parseTimestamp(fechaFinFin));
+                    ps4.setString(6, duracionFin);
                     ps4.setBigDecimal(7, parseBigDecimal(presupuesto));
                     ps4.setString(8, cedula);
                     ps4.setString(9, tramite);
@@ -488,7 +562,26 @@ public class ExcelProcessingService {
         } catch (Exception e) {
             throw new RuntimeException("Valor inválido en presupuesto: " + valor);
         }
-    }    
+    }
+
+    private Timestamp parseTimestamp(String fecha) {
+        try {
+            if (fecha == null || fecha.isBlank()) return null;
+
+            fecha = fecha.trim();
+
+            // Caso 1: ya viene con hora
+            if (fecha.contains(":")) {
+                return Timestamp.valueOf(fecha);
+            }
+
+            // Caso 2: solo fecha
+            return Timestamp.valueOf(fecha + " 00:00:00");
+
+        } catch (Exception e) {
+            throw new RuntimeException("Fecha inválida: " + fecha);
+        }
+    }
 
     private String getCellString(Cell cell) {
         try {
