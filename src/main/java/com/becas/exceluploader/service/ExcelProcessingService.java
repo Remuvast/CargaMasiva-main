@@ -56,7 +56,16 @@ public class ExcelProcessingService {
 
             String sqlValidaCedula = "SELECT 1 FROM solicitantes WHERE numero_identificacion = ?";
 
+            String sqlValidaTramite = """
+                SELECT 1
+                FROM solicitudes so
+                JOIN solicitantes sl ON sl.id = so.solicitantes_id
+                WHERE so.numero_tramite = ?
+                AND sl.numero_identificacion = ?
+            """;
+
             try (PreparedStatement psValidaCedula = conn.prepareStatement(sqlValidaCedula);
+                PreparedStatement psValidaTramite = conn.prepareStatement(sqlValidaTramite);
 
                  PreparedStatement ps1 = conn.prepareStatement(""" 
                     UPDATE solicitudes so
@@ -179,6 +188,47 @@ public class ExcelProcessingService {
                     // Validaciones base
                     errores.addAll(ExcelRowValidator.validarFila(fila, i + 1));
 
+                    // ================= VALIDACIÓN PRESUPUESTO =================
+                    String presupuestoStr = getCellString(fila.getCell(25));
+
+                    if (presupuestoStr == null || presupuestoStr.isBlank()) {
+                        errores.add(new ValidationError(
+                                i + 1,
+                                "Presupuesto Referencial",
+                                "Es obligatorio"
+                        ));
+                    } else {
+
+                        String normalizado = presupuestoStr.trim();
+
+                        // Normalización (igual que tu método)
+                        if (normalizado.contains(",") && !normalizado.contains(".")) {
+                            normalizado = normalizado.replace(",", ".");
+                        }
+                        if (normalizado.contains(",") && normalizado.contains(".")) {
+                            normalizado = normalizado.replace(",", "");
+                        }
+
+                        try {
+                            BigDecimal valor = new BigDecimal(normalizado);
+
+                            if (valor.compareTo(BigDecimal.ZERO) <= 0) {
+                                errores.add(new ValidationError(
+                                        i + 1,
+                                        "Presupuesto Referencial",
+                                        "Debe ser mayor a 0"
+                                ));
+                            }
+
+                        } catch (Exception e) {
+                            errores.add(new ValidationError(
+                                    i + 1,
+                                    "Presupuesto Referencial",
+                                    "Formato inválido (ej: 1234.56)"
+                            ));
+                        }
+                    }
+
                     // FK VALIDACIONES
                     Long nivel = getCellLong(fila.getCell(10));
                     if (nivel != null && nivel > 0 && !nivelesValidos.contains(nivel)) {
@@ -219,6 +269,21 @@ public class ExcelProcessingService {
                     String cedula = getCellString(fila.getCell(0));
                     if (cedula != null && !cedula.isBlank() && !existeCedula(psValidaCedula, cedula)) {
                         errores.add(new ValidationError(i + 1, "Cédula", "No existe en el Sistema"));
+                    }
+
+                    // Validación número de trámite vs cédula
+                    String tramite = getCellString(fila.getCell(4));
+
+                    if (tramite != null && !tramite.isBlank()
+                            && cedula != null && !cedula.isBlank()) {
+
+                        if (!existeTramite(psValidaTramite, tramite, cedula)) {
+                        errores.add(new ValidationError(
+                                    i + 1,
+                                    "Número de trámite",
+                                    "No existe o no pertenece a la cédula"
+                            ));
+                        }
                     }
                     
                     // ================= RESULTADO POR FILA =================
@@ -394,6 +459,14 @@ public class ExcelProcessingService {
         }
     }
 
+    private boolean existeTramite(PreparedStatement ps, String tramite, String cedula) throws SQLException {
+        ps.setString(1, tramite);
+        ps.setString(2, cedula);
+        try (ResultSet rs = ps.executeQuery()) {
+            return rs.next();
+        }
+    }
+
     private BigDecimal parseBigDecimal(String valor) {
         try {
             if (valor == null || valor.isBlank()) return BigDecimal.ZERO;
@@ -413,7 +486,7 @@ public class ExcelProcessingService {
             return new BigDecimal(valor);
 
         } catch (Exception e) {
-        return BigDecimal.ZERO;
+            throw new RuntimeException("Valor inválido en presupuesto: " + valor);
         }
     }    
 
