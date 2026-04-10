@@ -188,20 +188,23 @@ public class ExcelProcessingService {
                     // Validaciones base
                     errores.addAll(ExcelRowValidator.validarFila(fila, i + 1));
 
-                    // ================= VALIDACIÓN FECHAS ESTUDIO Y DURACION =================
+                    // ================= VALIDACIÓN FECHAS Y DURACIÓN =================
 
                     String fechaInicioEstudios = getCellString(fila.getCell(19));
                     String fechaFinEstudios = getCellString(fila.getCell(20));
                     String duracionEstudios = getCellString(fila.getCell(21));
+
+                    Timestamp tsInicioEst = null;
+                    Timestamp tsFinEst = null;
 
                     // ---- Fecha inicio ----
                     if (fechaInicioEstudios == null || fechaInicioEstudios.isBlank()) {
                         errores.add(new ValidationError(i + 1, "Fecha inicio estudios", "Es obligatoria"));
                     } else {
                         try {
-                            parseTimestamp(fechaInicioEstudios);
+                            tsInicioEst = parseTimestamp(fechaInicioEstudios);
                         } catch (Exception e) {
-                            errores.add(new ValidationError(i + 1, "Fecha inicio estudios", "Formato inválido (yyyy-MM-dd)"));
+                            errores.add(new ValidationError(i + 1, "Fecha inicio estudios", "Formato inválido"));
                         }
                     }
 
@@ -210,48 +213,99 @@ public class ExcelProcessingService {
                         errores.add(new ValidationError(i + 1, "Fecha fin estudios", "Es obligatoria"));
                     } else {
                         try {
-                            parseTimestamp(fechaFinEstudios);
+                            tsFinEst = parseTimestamp(fechaFinEstudios);
                         } catch (Exception e) {
-                            errores.add(new ValidationError(i + 1, "Fecha fin estudios", "Formato inválido (yyyy-MM-dd)"));
+                            errores.add(new ValidationError(i + 1, "Fecha fin estudios", "Formato inválido"));
                         }
+                    }
+
+                    // ---- Validación lógica ----
+                    if (tsInicioEst != null && tsFinEst != null && tsFinEst.before(tsInicioEst)) {
+                        errores.add(new ValidationError(i + 1, "Fechas estudios", "Fecha fin menor que inicio"));
                     }
 
                     // ---- Duración ----
                     if (duracionEstudios == null || duracionEstudios.isBlank()) {
                         errores.add(new ValidationError(i + 1, "Duración estudios", "Es obligatoria"));
+                    } else if (!esDuracionValida(duracionEstudios)) {
+
+                        errores.add(new ValidationError(
+                                i + 1,
+                                "Duración estudios",
+                                "Formato inválido. Ej: 0 Año(s), 4 Mes(es), 28 Día(s)"
+                        ));
+
+                    } else if (tsInicioEst != null && tsFinEst != null) {
+
+                        String calculada = calcularDuracion(tsInicioEst, tsFinEst);
+
+                        if (!duracionEstudios.equals(calculada)) {
+                            errores.add(new ValidationError(
+                                    i + 1,
+                                    "Duración estudios",
+                                    "No coincide con cálculo real: " + calculada
+                            ));
+                        }
                     }
 
-                    // ================= VALIDACIÓN FECHAS FINANCIAMIENTO Y DURACION =================
+                    // ================= VALIDACIÓN FINANCIAMIENTO =================
 
                     String fechaInicioFin = getCellString(fila.getCell(22));
                     String fechaFinFin = getCellString(fila.getCell(23));
                     String duracionFin = getCellString(fila.getCell(24));
 
-                    // ---- Fecha inicio financiamiento ----
+                    Timestamp tsInicioFin = null;
+                    Timestamp tsFinFin = null;
+
+                    // ---- Fecha inicio ----
                     if (fechaInicioFin == null || fechaInicioFin.isBlank()) {
                         errores.add(new ValidationError(i + 1, "Fecha inicio financiamiento", "Es obligatoria"));
                     } else {
                         try {
-                            parseTimestamp(fechaInicioFin);
+                            tsInicioFin = parseTimestamp(fechaInicioFin);
                         } catch (Exception e) {
-                            errores.add(new ValidationError(i + 1, "Fecha inicio financiamiento", "Formato inválido (yyyy-MM-dd)"));
+                            errores.add(new ValidationError(i + 1, "Fecha inicio financiamiento", "Formato inválido"));
                         }
                     }
 
-                    // ---- Fecha fin financiamiento ----
+                    // ---- Fecha fin ----
                     if (fechaFinFin == null || fechaFinFin.isBlank()) {
                         errores.add(new ValidationError(i + 1, "Fecha fin financiamiento", "Es obligatoria"));
                     } else {
                         try {
-                            parseTimestamp(fechaFinFin);
+                            tsFinFin = parseTimestamp(fechaFinFin);
                         } catch (Exception e) {
-                            errores.add(new ValidationError(i + 1, "Fecha fin financiamiento", "Formato inválido (yyyy-MM-dd)"));
+                            errores.add(new ValidationError(i + 1, "Fecha fin financiamiento", "Formato inválido"));
                         }
                     }
 
-                    // ---- Duración financiamiento ----
+                    // ---- Validación lógica ----
+                    if (tsInicioFin != null && tsFinFin != null && tsFinFin.before(tsInicioFin)) {
+                        errores.add(new ValidationError(i + 1, "Fechas financiamiento", "Fecha fin menor que inicio"));
+                    }
+
+                    // ---- Duración ----
                     if (duracionFin == null || duracionFin.isBlank()) {
                         errores.add(new ValidationError(i + 1, "Duración financiamiento", "Es obligatoria"));
+                    } else if (!esDuracionValida(duracionFin)) {
+
+                        errores.add(new ValidationError(
+                                i + 1,
+                                "Duración financiamiento",
+                                "Formato inválido. Ej: 0 Año(s), 4 Mes(es), 28 Día(s)"
+                        ));
+
+                    } else if (tsInicioFin != null && tsFinFin != null) {
+
+                        String calculada = calcularDuracion(tsInicioFin, tsFinFin);
+
+                        if (!duracionFin.equals(calculada)) {
+                            errores.add(new ValidationError(
+                                    i + 1,
+                                    "Duración financiamiento",
+                                    "No coincide con cálculo real: " + calculada
+                            ));
+                        }
                     }
 
                     // ================= VALIDACIÓN PRESUPUESTO =================
@@ -568,7 +622,7 @@ public class ExcelProcessingService {
         try {
             if (fecha == null || fecha.isBlank()) return null;
 
-            fecha = fecha.trim();
+            fecha = fecha.trim().replaceAll("\\s+", " ");
 
             // Caso 1: ya viene con hora
             if (fecha.contains(":")) {
@@ -606,4 +660,27 @@ public class ExcelProcessingService {
             return 0L;
         }
     }
+
+    private boolean esDuracionValida(String duracion) {
+        if (duracion == null) return false;
+
+        return duracion.matches("\\d+ Año\\(s\\), \\d+ Mes\\(es\\), \\d+ Día\\(s\\)");
+    }
+
+    private String calcularDuracion(Timestamp inicio, Timestamp fin) {
+        if (inicio == null || fin == null) return "";
+
+        java.time.LocalDate start = inicio.toLocalDateTime().toLocalDate();
+        java.time.LocalDate end = fin.toLocalDateTime().toLocalDate();
+
+        // 🔥 SUMAR 1 DÍA para que sea inclusivo como Excel
+        end = end.plusDays(1);
+
+        java.time.Period p = java.time.Period.between(start, end);
+
+        return p.getYears() + " Año(s), "
+            + p.getMonths() + " Mes(es), "
+            + p.getDays() + " Día(s)";
+    }
+
 }
