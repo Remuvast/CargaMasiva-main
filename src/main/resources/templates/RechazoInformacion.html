@@ -2,33 +2,32 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Rechazo Masivo</title>
+    <title>Carga de archivo Excel</title>
 
     <style>
-
         body {
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7fb;
             margin: 0;
-            padding: 0;
+            padding: 0 8px;
         }
 
         .container {
             max-width: 600px;
             margin: 100px auto 100px auto;
             background: #fff;
-            padding: 30px;
+            padding: 30px 20px;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
 
         .titulo-sistema {
             text-align: center;
-            color: #005aa7;
+            color: #a700a7;
             font-size: 22px;
             font-weight: bold;
             margin-bottom: 20px;
-            border-bottom: 2px solid #005aa7;
+            border-bottom: 2px solid #a700a7;
             padding-bottom: 10px;
         }
 
@@ -68,7 +67,7 @@
         }
 
         .resultado {
-            margin-top: 25px;
+            margin-top: 15px;
             background-color: #eef2f7;
             padding: 15px;
             border-radius: 6px;
@@ -76,32 +75,167 @@
             font-family: monospace;
         }
 
+        .barra-azul {
+            width: 100%;
+            height: 55px;
+            background: #0038A8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .barra-azul span {
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .menu-bar {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px 20px;
+            background: #f4f7fb;
+        }
+
+        .btn-menu {
+            padding: 6px 14px;
+            background-color: #0038A8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-right: 20px;
+        }
+
+        .btn-menu:hover {
+            background-color: #002f8a;
+        }
+
+        .btn-limpiar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 120px;           /* 🔹 tamaño fijo evita desbalance */
+            height: 30px;
+
+            padding: 0;             /* 🔹 importante: elimina desplazamiento */
+
+            background-color: #0065b7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+
+            margin: 6px auto;       /* centrado horizontal */
+
+            line-height: normal;    /* 🔹 evita empuje raro del texto */
+            text-align: center;     /* 🔹 refuerzo */
+        }
+
+        .btn-limpiar span {
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-limpiar:hover {
+            background-color: #004a87;
+        }
+
+        @media (max-width: 600px) {
+            .menu-bar {
+                justify-content: center;
+            }
+
+            .barra-azul span {
+                font-size: 16px;
+                text-align: center;
+                padding: 0 10px;
+            }
+
+            .container {
+                margin: 60px 10px 80px 10px;
+                padding: 20px;
+            }
+        }
+
+        .spinner {
+            margin: auto;
+            border: 5px solid #e0e0e0;
+            border-top: 5px solid #0065b7;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            animation: girar 1s linear infinite;
+        }
+
+        @keyframes girar {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
     </style>
 </head>
 
 <body>
 
-<!-- HEADER COMPARTIDO -->
+<!-- HEADER -->
 <div th:replace="fragments/header :: header"></div>
+
+<!-- BOTÓN MENÚ -->
+<div class="menu-bar">
+    <button class="btn-menu" onclick="location.href='/'">
+        ← Menú Principal
+    </button>
+</div>
 
 <!-- CONTENIDO -->
 <div class="container">
 
-    <h1 class="titulo-sistema">Postulación - Rechazo masivo de información</h1>
+    <h1 class="titulo-sistema">Postulación - Rechazo masivo</h1>
     <h2>Subida de archivo Excel</h2>
 
-    <form method="post" enctype="multipart/form-data" action="/rechazo-upload">
-        <input type="file" name="file" accept=".xlsx" required onchange="limpiarResultado()" />
+    <form method="post" enctype="multipart/form-data" action="/upload">
+        <input type="file"
+            name="file"
+            accept=".xlsx,.xls"
+            required
+            onchange="validarArchivo(this)" />
         <button type="submit">Subir y Procesar</button>
     </form>
 
+    <div id="loadingBox" style="display:none; text-align:center; margin-top:20px;">
+
+        <div class="spinner"></div>
+
+        <div style="margin-top:12px; font-weight:bold; color:#005aa7;">
+            Procesando archivo... por favor espere.
+        </div>
+
+        <div style="font-size:13px; color:#666; margin-top:6px;">
+            No cierre esta ventana mientras se cargan los datos.
+        </div>
+
+    </div>
+
+
+    <!-- RESULTADO -->
     <div id="resultadoDiv" class="resultado" th:if="${resultado}">
         <h4>Resultado:</h4>
         <div th:text="${resultado}"></div>
 
-        <form method="get" action="/">
-            <button type="submit">Limpiar</button>
-        </form>
+        <!-- BOTONES -->
+        <div style="margin-top:4px; display:flex; justify-content:center;">
+            <button type="button" class="btn-limpiar" onclick="limpiarResultado()">
+                <span>Limpiar</span>
+            </button>
+        </div>
+
     </div>
 
 </div>
@@ -109,13 +243,49 @@
 <script>
 function limpiarResultado() {
     const resultado = document.getElementById('resultadoDiv');
+
     if (resultado) {
         resultado.style.display = 'none';
     }
 }
+
+function validarArchivo(input) {
+
+    const file = input.files[0];
+
+    if (!file) return false;
+
+    const maxSize = 20 * 1024 * 1024; // 20MB
+
+    const nombre = file.name.toLowerCase();
+
+    // Validar extensión
+    if (!nombre.endsWith(".xlsx") && !nombre.endsWith(".xls")) {
+        alert("❌ Solo se permiten archivos Excel (.xlsx o .xls)");
+        input.value = "";
+        return false;
+    }
+
+    // Validar tamaño
+    if (file.size > maxSize) {
+        alert("❌ El archivo supera los 20MB permitidos.");
+        input.value = "";
+        return false;
+    }
+
+    limpiarResultado();
+    return true;
+}
+
+    document.querySelector("form").addEventListener("submit", function() {
+
+        document.getElementById("loadingBox").style.display = "block";
+
+    });
+
 </script>
 
-<!-- FOOTER COMPARTIDO -->
+<!-- FOOTER -->
 <div th:replace="fragments/footer :: footer"></div>
 
 </body>
