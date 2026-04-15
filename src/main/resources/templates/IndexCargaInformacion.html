@@ -135,17 +135,28 @@
 
     </div>
 
-    <!-- BOTÓN SALIR ABAJO -->
+    <!-- BOTÓN SALIR -->
     <div class="footer-action">
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="exit">
-                <span class="icon-left">🚪</span>
-                <span>Salir</span>
-            </button>
-        </form>
+        <button type="button" class="exit" onclick="salirSistema()">
+            🚪 Salir
+        </button>
     </div>
 
-</div>
+    <!-- SCRIPT -->
+    <script th:inline="javascript">
+        function salirSistema() {
+
+            // intenta cerrar ventana
+            window.open('', '_self');
+            window.close();
+
+            // URL desde application.properties
+            var url = /*[[${logoutUrl}]]*/ '';
+
+            // redirección directa (lo correcto en web)
+            window.location.href = url;
+        }
+    </script>
 
 <!-- FOOTER -->
 <div th:replace="fragments/footer :: footer"></div>
