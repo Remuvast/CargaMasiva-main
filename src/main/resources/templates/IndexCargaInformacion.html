@@ -137,10 +137,12 @@
 
     <!-- BOTÓN SALIR ABAJO -->
     <div class="footer-action">
-        <button class="exit" onclick="location.href='/'">
-            <span class="icon-left">🚪</span>
-            <span>Salir</span>
-        </button>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="exit">
+                <span class="icon-left">🚪</span>
+                <span>Salir</span>
+            </button>
+        </form>
     </div>
 
 </div>
