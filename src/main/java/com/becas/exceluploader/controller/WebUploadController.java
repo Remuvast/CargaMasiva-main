@@ -16,11 +16,25 @@ public class WebUploadController {
         this.excelService = excelService;
     }
 
+// 🔹 PANTALLA PRINCIPAL (2 botones)
     @GetMapping("/")
-    public String showForm() {
-        return "upload";
+    public String menu() {
+        return "IndexCargaInformacion";
     }
 
+    // 🔹 FORMULARIO CARGA MASIVA
+    @GetMapping("/carga")
+    public String showCarga() {
+        return "CargaInformacion";
+    }
+
+    // 🔹 FORMULARIO RECHAZO MASIVO
+    @GetMapping("/rechazo")
+    public String mostrarRechazo() {
+        return "RechazoInformacion";
+    }
+
+    // 🔹 PROCESO DE CARGA
     @PostMapping("/upload")
     public String handleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
         try {
@@ -29,6 +43,6 @@ public class WebUploadController {
         } catch (Exception e) {
         redirectAttributes.addFlashAttribute("resultado", "Error: " + e.getMessage());
         }
-        return "redirect:/";
+        return "redirect:/carga";
     }
 }

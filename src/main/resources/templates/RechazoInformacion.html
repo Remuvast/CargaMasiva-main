@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rechazo Masivo</title>
+
+    <style>
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7fb;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 100px auto 100px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .titulo-sistema {
+            text-align: center;
+            color: #005aa7;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #005aa7;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #5a6c7d;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 25px;
+            background-color: #0065b7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #004a87;
+        }
+
+        .resultado {
+            margin-top: 25px;
+            background-color: #eef2f7;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER COMPARTIDO -->
+<div th:replace="fragments/header :: header"></div>
+
+<!-- CONTENIDO -->
+<div class="container">
+
+    <h1 class="titulo-sistema">Postulación - Rechazo masivo de información</h1>
+    <h2>Subida de archivo Excel</h2>
+
+    <form method="post" enctype="multipart/form-data" action="/rechazo-upload">
+        <input type="file" name="file" accept=".xlsx" required onchange="limpiarResultado()" />
+        <button type="submit">Subir y Procesar</button>
+    </form>
+
+    <div id="resultadoDiv" class="resultado" th:if="${resultado}">
+        <h4>Resultado:</h4>
+        <div th:text="${resultado}"></div>
+
+        <form method="get" action="/">
+            <button type="submit">Limpiar</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+function limpiarResultado() {
+    const resultado = document.getElementById('resultadoDiv');
+    if (resultado) {
+        resultado.style.display = 'none';
+    }
+}
+</script>
+
+<!-- FOOTER COMPARTIDO -->
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

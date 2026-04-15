@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Postulación</title>
+
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7fb;
+            margin: 0;
+            padding: 0 8px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 10px auto 120px auto;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 10px 0 5px 0;
+        }
+
+        p {
+            text-align: center;
+            margin: 0 0 15px 0;
+            color: #5a6c7d;
+        }
+
+        /* GRID SUPERIOR */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 160px);
+            justify-content: center;
+            gap: 80px 140px;
+            margin-top: 10px;
+        }
+
+        /* TARJETAS */
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px 10px;
+            width: 250px;
+            height: 140px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+            border-left: 2px solid #0038A8;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-left: 6px solid #00a759;
+        }
+
+        .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .text {
+            font-weight: bold;
+        }
+
+        /* BOTÓN SALIR ABAJO */
+        .footer-action {
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .exit {
+            background: white;
+            border: 1px solid #999;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 220px;
+            height: 36px;
+            font-size: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            border-left: 2px solid #999;
+        }
+
+        .exit:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            background: #f2f2f2;
+            border-left: 6px solid #777;
+        }
+
+        .icon-left {
+            font-size: 18px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div th:replace="fragments/header :: header"></div>
+
+<!-- CONTENIDO -->
+<div class="container">
+
+    <h1 style="color:#0038A8;">
+    Sistema de Postulación
+    </h1>
+
+    <p>Seleccione una opción para continuar</p>
+
+    <!-- BOTONES PRINCIPALES -->
+    <div class="grid">
+
+        <button class="card" onclick="location.href='/carga'">
+            <div class="icon">📤</div>
+            <div class="text">Carga Masiva</div>
+        </button>
+
+        <button class="card" onclick="location.href='/rechazo'">
+            <div class="icon">❌</div>
+            <div class="text">Rechazo Masivo</div>
+        </button>
+
+    </div>
+
+    <!-- BOTÓN SALIR ABAJO -->
+    <div class="footer-action">
+        <button class="exit" onclick="location.href='/'">
+            <span class="icon-left">🚪</span>
+            <span>Salir</span>
+        </button>
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

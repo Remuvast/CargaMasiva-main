@@ -3,7 +3,6 @@ package com.becas.exceluploader.service;
 import com.becas.exceluploader.validation.ExcelRowValidator;
 import com.becas.exceluploader.validation.ValidationError;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,18 +26,28 @@ public class ExcelProcessingService {
         StringBuilder resultado = new StringBuilder();
         int totalProcesados = 0;
         int totalErrores = 0;
+        int totalFilasValidas = 0;
         int batchSize = 300;
 
+        Connection conn = null;
+
         try (
-                Connection conn = dataSource.getConnection();
-                InputStream input = file.getInputStream();
-                Workbook workbook = new XSSFWorkbook(input)
+            InputStream input = file.getInputStream();
+            Workbook workbook = WorkbookFactory.create(input);
         ) {
+
+            conn = dataSource.getConnection();
+
+            conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
             conn.setAutoCommit(false);
 
             Sheet hoja = workbook.getSheetAt(0);
             int lastRow = getLastDataRow(hoja);
+
+            if (lastRow < 6) {
+                return "❌ El archivo no contiene filas para procesar.";
+            }
 
             // ================= 🔥 CARGA EN MEMORIA =================
 
@@ -352,7 +361,7 @@ public class ExcelProcessingService {
                     // FK VALIDACIONES
                     Long nivel = getCellLong(fila.getCell(10));
                     if (nivel != null && nivel > 0 && !nivelesValidos.contains(nivel)) {
-                        errores.add(new ValidationError(i + 1, "Nivel de estudio", "No existe en catálogoe"));
+                        errores.add(new ValidationError(i + 1, "Nivel de estudio", "No existe en catálogo"));
                     }
 
                     Long area = getCellLong(fila.getCell(13));
@@ -443,6 +452,7 @@ public class ExcelProcessingService {
 
                     Row fila = hoja.getRow(i);
                     if (isRowEmpty(fila)) continue;
+                    totalFilasValidas++;
 
                     String cedula = getCellString(fila.getCell(0));
                     String tramite = getCellString(fila.getCell(4));
@@ -521,16 +531,24 @@ public class ExcelProcessingService {
                     ps5.addBatch();
 
                     countBatch++;
-                    totalProcesados++;
 
                     if (countBatch % batchSize == 0) {
+
                         ps1.executeBatch();
                         ps2.executeBatch();
                         ps3.executeBatch();
                         ps4.executeBatch();
                         ps5.executeBatch();
-                        conn.commit();
+
+                        ps1.clearBatch();
+                        ps2.clearBatch();
+                        ps3.clearBatch();
+                        ps4.clearBatch();
+                        ps5.clearBatch();
+
+                        countBatch = 0;
                     }
+
                 }
 
                 ps1.executeBatch();
@@ -538,11 +556,42 @@ public class ExcelProcessingService {
                 ps3.executeBatch();
                 ps4.executeBatch();
                 ps5.executeBatch();
+
+                ps1.clearBatch();
+                ps2.clearBatch();
+                ps3.clearBatch();
+                ps4.clearBatch();
+                ps5.clearBatch();
+
+                if (totalFilasValidas == 0) {
+                    resultado.append("\n⛔ No existen filas con datos para procesar.");
+                    return resultado.toString();
+                }
+
                 conn.commit();
+
+                totalProcesados = totalFilasValidas;
             }
 
         } catch (Exception e) {
+
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
             resultado.append("❌ ERROR GENERAL: ").append(e.getMessage());
+        }
+
+        finally {
+            try {
+                if (conn != null) conn.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
 
         resultado.append("\n\n🚀 EJECUCIÓN:");
@@ -573,10 +622,21 @@ public class ExcelProcessingService {
     }
 
     private boolean isRowEmpty(Row row) {
+
         if (row == null) return true;
+
         for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i++) {
-            if (!getCellString(row.getCell(i)).isBlank()) return false;
+
+            Cell cell = row.getCell(i);
+
+            if (cell != null &&
+                cell.getCellType() != CellType.BLANK &&
+                !getCellString(cell).trim().isEmpty()) {
+
+                return false;
+            }
         }
+
         return true;
     }
 
@@ -640,11 +700,10 @@ public class ExcelProcessingService {
     private String getCellString(Cell cell) {
         try {
             if (cell == null) return "";
-            switch (cell.getCellType()) {
-                case STRING: return cell.getStringCellValue().trim();
-                case NUMERIC: return BigDecimal.valueOf(cell.getNumericCellValue()).toPlainString();
-                default: return "";
-            }
+
+            DataFormatter formatter = new DataFormatter();
+            return formatter.formatCellValue(cell).trim();
+
         } catch (Exception e) {
             return "";
         }
