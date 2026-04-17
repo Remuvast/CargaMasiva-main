@@ -17,7 +17,7 @@ public class WebUploadController {
     }
 
 // 🔹 PANTALLA PRINCIPAL (2 botones)
-    @GetMapping("/")
+    @GetMapping("/menu")
     public String menu() {
         return "IndexCargaInformacion";
     }
