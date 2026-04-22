@@ -1,6 +1,11 @@
 package com.becas.exceluploader.controller;
 
 import com.becas.exceluploader.service.ExcelProcessingService;
+
+import com.becas.exceluploader.entity.AuditoriaCargaMasiva;
+import com.becas.exceluploader.repository.AuditoriaCargaMasivaRepository;
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +16,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class WebUploadController {
 
     private final ExcelProcessingService excelService;
+    private final AuditoriaCargaMasivaRepository auditoriaRepo;
 
-    public WebUploadController(ExcelProcessingService excelService) {
+    public WebUploadController(
+            ExcelProcessingService excelService,
+            AuditoriaCargaMasivaRepository auditoriaRepo) {
+
         this.excelService = excelService;
+        this.auditoriaRepo = auditoriaRepo;
     }
 
 // 🔹 PANTALLA PRINCIPAL (2 botones)
@@ -36,13 +46,36 @@ public class WebUploadController {
 
     // 🔹 PROCESO DE CARGA
     @PostMapping("/upload")
-    public String handleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+    public String handleFileUpload(
+            @RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
+
+        AuditoriaCargaMasiva au = new AuditoriaCargaMasiva();
+
         try {
             String resultado = excelService.procesarExcel(file);
+
             redirectAttributes.addFlashAttribute("resultado", resultado);
+
+            au.setUsuario("ADMIN");
+            au.setNombreArchivo(file.getOriginalFilename());
+            au.setFechaRegistro(LocalDateTime.now());
+            au.setEstado("OK");
+            au.setMensaje(resultado);
+
         } catch (Exception e) {
-        redirectAttributes.addFlashAttribute("resultado", "Error: " + e.getMessage());
+
+            redirectAttributes.addFlashAttribute("resultado", "Error: " + e.getMessage());
+
+            au.setUsuario("ADMIN");
+            au.setNombreArchivo(file.getOriginalFilename());
+            au.setFechaRegistro(LocalDateTime.now());
+            au.setEstado("ERROR");
+            au.setMensaje(e.getMessage());
         }
+
+        auditoriaRepo.save(au);
+
         return "redirect:/carga";
     }
 }
