@@ -12,10 +12,16 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 
+import java.nio.file.*;
+import org.springframework.beans.factory.annotation.Value;
+
 @Service
 public class ExcelProcessingService {
 
     private final DataSource dataSource;
+
+    @Value("${app.upload.dir}")
+    private String uploadDir;
 
     public ExcelProcessingService(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -570,6 +576,8 @@ public class ExcelProcessingService {
 
                 conn.commit();
 
+                guardarArchivoServidor(file);
+
                 totalProcesados = totalFilasValidas;
             }
 
@@ -598,6 +606,31 @@ public class ExcelProcessingService {
         resultado.append("\n✔️ Procesados: ").append(totalProcesados);
 
         return resultado.toString();
+
+    }
+
+    private void guardarArchivoServidor(MultipartFile file) throws Exception {
+
+        Path carpeta = Paths.get(uploadDir).toAbsolutePath().normalize();
+
+        if (!Files.exists(carpeta)) {
+            Files.createDirectories(carpeta);
+        }
+
+        String archivoOriginal = file.getOriginalFilename();
+
+        String fechaHora = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+
+        String nombre = fechaHora + "_" + archivoOriginal;
+
+        Path destino = carpeta.resolve(nombre);
+
+        Files.copy(
+            file.getInputStream(),
+            destino,
+            StandardCopyOption.REPLACE_EXISTING
+        );
     }
     
     // ================= HELPERS =================

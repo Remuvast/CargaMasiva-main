@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class WebUploadController {
 
@@ -48,16 +50,19 @@ public class WebUploadController {
     @PostMapping("/upload")
     public String handleFileUpload(
             @RequestParam("file") MultipartFile file,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
 
         AuditoriaCargaMasiva au = new AuditoriaCargaMasiva();
+
+        String usuario = (String) session.getAttribute("usuarioLogeado");
 
         try {
             String resultado = excelService.procesarExcel(file);
 
             redirectAttributes.addFlashAttribute("resultado", resultado);
 
-            au.setUsuario("ADMIN");
+            au.setUsuario(usuario);
             au.setNombreArchivo(file.getOriginalFilename());
             au.setFechaRegistro(LocalDateTime.now());
             au.setEstado("OK");
@@ -67,7 +72,7 @@ public class WebUploadController {
 
             redirectAttributes.addFlashAttribute("resultado", "Error: " + e.getMessage());
 
-            au.setUsuario("ADMIN");
+            au.setUsuario(usuario);
             au.setNombreArchivo(file.getOriginalFilename());
             au.setFechaRegistro(LocalDateTime.now());
             au.setEstado("ERROR");

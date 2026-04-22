@@ -14,7 +14,7 @@ public class AuditoriaCargaMasiva {
     @Column(name = "usuario")
     private String usuario;
 
-    @Column(name = "nombre_archivo")
+    @Column(name = "nombre_archivo", length = 500)
     private String nombreArchivo;
 
     @Column(name = "fecha_registro")
@@ -23,7 +23,7 @@ public class AuditoriaCargaMasiva {
     @Column(name = "estado")
     private String estado;
 
-    @Column(name = "mensaje")
+    @Column(name="mensaje", columnDefinition = "TEXT")
     private String mensaje;
 
     @Column(name = "total_registros")
