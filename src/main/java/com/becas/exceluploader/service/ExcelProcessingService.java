@@ -15,6 +15,8 @@ import java.util.*;
 import java.nio.file.*;
 import org.springframework.beans.factory.annotation.Value;
 
+import com.becas.exceluploader.service.ResultadoCarga;
+
 @Service
 public class ExcelProcessingService {
 
@@ -27,7 +29,7 @@ public class ExcelProcessingService {
         this.dataSource = dataSource;
     }
 
-    public String procesarExcel(MultipartFile file) {
+    public ResultadoCarga procesarExcel(MultipartFile file) {
 
         StringBuilder resultado = new StringBuilder();
         int totalProcesados = 0;
@@ -52,7 +54,7 @@ public class ExcelProcessingService {
             int lastRow = getLastDataRow(hoja);
 
             if (lastRow < 6) {
-                return "❌ El archivo no contiene filas para procesar.";
+                return new ResultadoCarga("❌ El archivo no contiene filas para procesar.", 0);
             }
 
             // ================= 🔥 CARGA EN MEMORIA =================
@@ -447,7 +449,7 @@ public class ExcelProcessingService {
                 if (hayErroresGlobales) {
                     conn.rollback();
                     resultado.append("\n⛔ PROCESO CANCELADO: Existen errores. No se guardó nada. Favor corregir el archivo excel e intentarlo nuevamente");
-                    return resultado.toString();
+                    return new ResultadoCarga(resultado.toString(), 0);
                 }
 
                 // ================= 🔥 FASE 2: EJECUCIÓN =================
@@ -571,7 +573,7 @@ public class ExcelProcessingService {
 
                 if (totalFilasValidas == 0) {
                     resultado.append("\n⛔ No existen filas con datos para procesar.");
-                    return resultado.toString();
+                    return new ResultadoCarga(resultado.toString(), totalProcesados);
                 }
 
                 conn.commit();
@@ -605,7 +607,7 @@ public class ExcelProcessingService {
         resultado.append("\n\n🚀 EJECUCIÓN:");
         resultado.append("\n✔️ Procesados: ").append(totalProcesados);
 
-        return resultado.toString();
+        return new ResultadoCarga(resultado.toString(), totalProcesados);
 
     }
 

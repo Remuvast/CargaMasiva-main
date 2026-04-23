@@ -1,6 +1,7 @@
 package com.becas.exceluploader.controller;
 
 import com.becas.exceluploader.service.ExcelProcessingService;
+import com.becas.exceluploader.service.ResultadoCarga;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,12 +17,13 @@ public class ExcelUploadController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadExcel(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ResultadoCarga> uploadExcel(@RequestParam("file") MultipartFile file) {
         try {
-            String resultado = excelService.procesarExcel(file);
+            ResultadoCarga resultado = excelService.procesarExcel(file);
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ResultadoCarga("Error: " + e.getMessage(), 0));
         }
     }
 }

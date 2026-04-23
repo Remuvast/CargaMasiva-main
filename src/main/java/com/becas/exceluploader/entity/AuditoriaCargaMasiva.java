@@ -26,8 +26,8 @@ public class AuditoriaCargaMasiva {
     @Column(name="mensaje", columnDefinition = "TEXT")
     private String mensaje;
 
-    @Column(name = "total_registros")
-    private Integer totalRegistros;
+    @Column(name = "total_registros_procesados")
+    private Integer totalRegistrosProcesados;
 
     public AuditoriaCargaMasiva() {
     }
@@ -76,11 +76,11 @@ public class AuditoriaCargaMasiva {
         this.mensaje = mensaje;
     }
 
-    public Integer getTotalRegistros() {
-        return totalRegistros;
+    public Integer getTotalRegistrosProcesados() {
+        return totalRegistrosProcesados;
     }
 
-    public void setTotalRegistros(Integer totalRegistros) {
-        this.totalRegistros = totalRegistros;
+    public void setTotalRegistrosProcesados(Integer totalRegistrosProcesados) {
+        this.totalRegistrosProcesados = totalRegistrosProcesados;
     }
 }

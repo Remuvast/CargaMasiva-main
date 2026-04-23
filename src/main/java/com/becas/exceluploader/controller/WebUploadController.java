@@ -14,6 +14,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
 
+import com.becas.exceluploader.service.ResultadoCarga;
+
 @Controller
 public class WebUploadController {
 
@@ -58,15 +60,23 @@ public class WebUploadController {
         String usuario = (String) session.getAttribute("usuarioLogeado");
 
         try {
-            String resultado = excelService.procesarExcel(file);
+            ResultadoCarga res = excelService.procesarExcel(file);
 
-            redirectAttributes.addFlashAttribute("resultado", resultado);
+            redirectAttributes.addFlashAttribute("resultado", res.getMensaje());
 
             au.setUsuario(usuario);
             au.setNombreArchivo(file.getOriginalFilename());
             au.setFechaRegistro(LocalDateTime.now());
-            au.setEstado("OK");
-            au.setMensaje(resultado);
+            au.setMensaje(res.getMensaje());
+            au.setTotalRegistrosProcesados(res.getTotalProcesados());
+
+            // 🔥 LÓGICA DE ESTADO
+            if (res.getMensaje().contains("⛔ PROCESO CANCELADO")
+                    || res.getMensaje().contains("❌")) {
+                au.setEstado("ERROR");
+            } else {
+                au.setEstado("OK");
+            }
 
         } catch (Exception e) {
 
@@ -77,6 +87,7 @@ public class WebUploadController {
             au.setFechaRegistro(LocalDateTime.now());
             au.setEstado("ERROR");
             au.setMensaje(e.getMessage());
+            au.setTotalRegistrosProcesados(0);
         }
 
         auditoriaRepo.save(au);
