@@ -207,8 +207,11 @@ public class ExcelProcessingService {
 
                     // ================= VALIDACIÓN FECHAS Y DURACIÓN =================
 
-                    String fechaInicioEstudios = getCellString(fila.getCell(19));
-                    String fechaFinEstudios = getCellString(fila.getCell(20));
+                    Cell cellInicioEst = fila.getCell(19);
+                    Cell cellFinEst = fila.getCell(20);
+
+                    String fechaInicioEstudios = getCellString(cellInicioEst);
+                    String fechaFinEstudios = getCellString(cellFinEst);
                     String duracionEstudios = getCellString(fila.getCell(21));
 
                     Timestamp tsInicioEst = null;
@@ -219,7 +222,7 @@ public class ExcelProcessingService {
                         errores.add(new ValidationError(i + 1, "Fecha inicio estudios", "Es obligatoria"));
                     } else {
                         try {
-                            tsInicioEst = parseTimestamp(fechaInicioEstudios);
+                            tsInicioEst = getCellTimestamp(cellInicioEst);
                         } catch (Exception e) {
                             errores.add(new ValidationError(i + 1, "Fecha inicio estudios", "Formato inválido"));
                         }
@@ -230,7 +233,7 @@ public class ExcelProcessingService {
                         errores.add(new ValidationError(i + 1, "Fecha fin estudios", "Es obligatoria"));
                     } else {
                         try {
-                            tsFinEst = parseTimestamp(fechaFinEstudios);
+                            tsFinEst = getCellTimestamp(cellFinEst);
                         } catch (Exception e) {
                             errores.add(new ValidationError(i + 1, "Fecha fin estudios", "Formato inválido"));
                         }
@@ -255,8 +258,9 @@ public class ExcelProcessingService {
                     } else if (tsInicioEst != null && tsFinEst != null) {
 
                         String calculada = calcularDuracion(tsInicioEst, tsFinEst);
+                        String duracionExcel = duracionEstudios.trim().replaceAll("\\s+", " ");
 
-                        if (!duracionEstudios.equals(calculada)) {
+                        if (!duracionExcel.equals(calculada)) {
                             errores.add(new ValidationError(
                                     i + 1,
                                     "Duración estudios",
@@ -267,8 +271,11 @@ public class ExcelProcessingService {
 
                     // ================= VALIDACIÓN FINANCIAMIENTO =================
 
-                    String fechaInicioFin = getCellString(fila.getCell(22));
-                    String fechaFinFin = getCellString(fila.getCell(23));
+                    Cell cellInicioFin = fila.getCell(22);
+                    Cell cellFinFin = fila.getCell(23);
+
+                    String fechaInicioFin = getCellString(cellInicioFin);
+                    String fechaFinFin = getCellString(cellFinFin);
                     String duracionFin = getCellString(fila.getCell(24));
 
                     Timestamp tsInicioFin = null;
@@ -279,7 +286,7 @@ public class ExcelProcessingService {
                         errores.add(new ValidationError(i + 1, "Fecha inicio financiamiento", "Es obligatoria"));
                     } else {
                         try {
-                            tsInicioFin = parseTimestamp(fechaInicioFin);
+                            tsInicioFin = getCellTimestamp(cellInicioFin);
                         } catch (Exception e) {
                             errores.add(new ValidationError(i + 1, "Fecha inicio financiamiento", "Formato inválido"));
                         }
@@ -290,7 +297,7 @@ public class ExcelProcessingService {
                         errores.add(new ValidationError(i + 1, "Fecha fin financiamiento", "Es obligatoria"));
                     } else {
                         try {
-                            tsFinFin = parseTimestamp(fechaFinFin);
+                            tsFinFin = getCellTimestamp(cellFinFin);
                         } catch (Exception e) {
                             errores.add(new ValidationError(i + 1, "Fecha fin financiamiento", "Formato inválido"));
                         }
@@ -315,8 +322,9 @@ public class ExcelProcessingService {
                     } else if (tsInicioFin != null && tsFinFin != null) {
 
                         String calculada = calcularDuracion(tsInicioFin, tsFinFin);
+                        String duracionExcel = duracionFin.trim().replaceAll("\\s+", " ");
 
-                        if (!duracionFin.equals(calculada)) {
+                        if (!duracionExcel.equals(calculada)) {
                             errores.add(new ValidationError(
                                     i + 1,
                                     "Duración financiamiento",
@@ -327,6 +335,7 @@ public class ExcelProcessingService {
 
                     // ================= VALIDACIÓN PRESUPUESTO =================
                     String presupuestoStr = getCellString(fila.getCell(25));
+                    BigDecimal presupuestoValidado = validarPresupuesto(presupuestoStr);
 
                     if (presupuestoStr == null || presupuestoStr.isBlank()) {
                         errores.add(new ValidationError(
@@ -334,36 +343,13 @@ public class ExcelProcessingService {
                                 "Presupuesto Referencial",
                                 "Es obligatorio"
                         ));
-                    } else {
 
-                        String normalizado = presupuestoStr.trim();
-
-                        // Normalización (igual que en el método)
-                        if (normalizado.contains(",") && !normalizado.contains(".")) {
-                            normalizado = normalizado.replace(",", ".");
-                        }
-                        if (normalizado.contains(",") && normalizado.contains(".")) {
-                            normalizado = normalizado.replace(",", "");
-                        }
-
-                        try {
-                            BigDecimal valor = new BigDecimal(normalizado);
-
-                            if (valor.compareTo(BigDecimal.ZERO) <= 0) {
-                                errores.add(new ValidationError(
-                                        i + 1,
-                                        "Presupuesto Referencial",
-                                        "Debe ser mayor a 0"
-                                ));
-                            }
-
-                        } catch (Exception e) {
-                            errores.add(new ValidationError(
-                                    i + 1,
-                                    "Presupuesto Referencial",
-                                    "Formato inválido (ej: 1234.56)"
-                            ));
-                        }
+                    } else if (presupuestoValidado == null) {
+                        errores.add(new ValidationError(
+                                i + 1,
+                                "Presupuesto Referencial",
+                                "Formato inválido o debe ser mayor a 0"
+                        ));
                     }
 
                     // FK VALIDACIONES
@@ -566,8 +552,8 @@ public class ExcelProcessingService {
                     ps3.setLong(5, pais);
                     ps3.setLong(6, titulo);
                     ps3.setLong(7, idioma);
-                    ps3.setTimestamp(8, parseTimestamp(fechaInicioEstudios));
-                    ps3.setTimestamp(9, parseTimestamp(fechaFinEstudios));
+                    ps3.setTimestamp(8, getCellTimestamp(fila.getCell(19)));
+                    ps3.setTimestamp(9, getCellTimestamp(fila.getCell(20)));
                     ps3.setString(10, duracionEstudios);
                     ps3.setBoolean(11, true);
                     ps3.setString(12, cedula);
@@ -575,11 +561,11 @@ public class ExcelProcessingService {
                     ps3.addBatch();
 
                     // ps4
-                    ps4.setTimestamp(1, parseTimestamp(fechaInicioFin));
-                    ps4.setTimestamp(2, parseTimestamp(fechaFinFin));
+                    ps4.setTimestamp(1, getCellTimestamp(fila.getCell(22)));
+                    ps4.setTimestamp(2, getCellTimestamp(fila.getCell(23)));
                     ps4.setString(3, duracionFin);
-                    ps4.setTimestamp(4, parseTimestamp(fechaInicioFin));
-                    ps4.setTimestamp(5, parseTimestamp(fechaFinFin));
+                    ps4.setTimestamp(4, getCellTimestamp(fila.getCell(22)));
+                    ps4.setTimestamp(5, getCellTimestamp(fila.getCell(23)));
                     ps4.setString(6, duracionFin);
                     ps4.setBigDecimal(7, parseBigDecimal(presupuesto));
                     ps4.setString(8, cedula);
@@ -748,20 +734,71 @@ public class ExcelProcessingService {
         }
     }
 
-    private BigDecimal parseBigDecimal(String valor) {
-        try {
-            if (valor == null || valor.isBlank()) return BigDecimal.ZERO;
+    private BigDecimal validarPresupuesto(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
 
+        try {
             valor = valor.trim();
 
-            // Caso 1: viene con coma decimal (formato latino)
-            if (valor.contains(",") && !valor.contains(".")) {
+            if (valor.contains(".") && valor.contains(",")) {
+
+                int posPunto = valor.lastIndexOf('.');
+                int posComa = valor.lastIndexOf(',');
+
+                if (posPunto < posComa) {
+                    valor = valor.replace(".", "");
+                    valor = valor.replace(",", ".");
+                } else {
+                    valor = valor.replace(",", "");
+                }
+
+            } else if (valor.contains(",")) {
                 valor = valor.replace(",", ".");
             }
 
-            // Caso 2: viene con miles (1,234.56)
-            if (valor.contains(",") && valor.contains(".")) {
-                valor = valor.replace(",", "");
+            BigDecimal numero = new BigDecimal(valor);
+
+            if (numero.compareTo(BigDecimal.ZERO) <= 0) {
+                return null;
+            }
+
+            return numero;
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private BigDecimal parseBigDecimal(String valor) {
+        try {
+            if (valor == null || valor.isBlank()) {
+                return BigDecimal.ZERO;
+            }
+
+            valor = valor.trim();
+
+            // Caso: 4.542,76  (miles con punto, decimal con coma)
+            if (valor.contains(".") && valor.contains(",")) {
+
+                int posPunto = valor.lastIndexOf('.');
+                int posComa = valor.lastIndexOf(',');
+
+                if (posPunto < posComa) {
+                    // formato latino
+                    valor = valor.replace(".", "");
+                    valor = valor.replace(",", ".");
+                } else {
+                    // formato inglés
+                    valor = valor.replace(",", "");
+                }
+
+            }
+
+            // Caso: 4542,76
+            else if (valor.contains(",")) {
+                valor = valor.replace(",", ".");
             }
 
             return new BigDecimal(valor);
@@ -799,6 +836,39 @@ public class ExcelProcessingService {
 
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    private Timestamp getCellTimestamp(Cell cell) {
+        try {
+            if (cell == null) return null;
+
+            // fecha real de Excel
+            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                return new Timestamp(cell.getDateCellValue().getTime());
+            }
+
+            // fórmula
+            if (cell.getCellType() == CellType.FORMULA) {
+                FormulaEvaluator evaluator = cell.getSheet()
+                        .getWorkbook()
+                        .getCreationHelper()
+                        .createFormulaEvaluator();
+
+                CellValue cellValue = evaluator.evaluate(cell);
+
+                if (cellValue.getCellType() == CellType.NUMERIC
+                        && DateUtil.isCellDateFormatted(cell)) {
+                    return new Timestamp(cell.getDateCellValue().getTime());
+                }
+            }
+
+            // texto
+            String fecha = getCellString(cell);
+            return parseTimestamp(fecha);
+
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -850,7 +920,11 @@ public class ExcelProcessingService {
     }
 
     private boolean esDuracionValida(String duracion) {
-        if (duracion == null) return false;
+        if (duracion == null || duracion.isBlank()) {
+            return false;
+        }
+
+        duracion = duracion.trim().replaceAll("\\s+", " ");
 
         return duracion.matches("\\d+ Año\\(s\\), \\d+ Mes\\(es\\), \\d+ Día\\(s\\)");
     }

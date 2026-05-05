@@ -7,6 +7,12 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+
 public class ExcelRowValidator {
 
     public static List<ValidationError> validarFila(Row fila, int rowIndex) {
@@ -30,12 +36,18 @@ public class ExcelRowValidator {
         Long titulo = ScriptGeneratorUtil.getCellLong(fila.getCell(17));
         Long idioma = ScriptGeneratorUtil.getCellLong(fila.getCell(18));
 
-        String fechaInicioEstudios = ScriptGeneratorUtil.getCellString(fila.getCell(19));
-        String fechaFinEstudios = ScriptGeneratorUtil.getCellString(fila.getCell(20));
+        Cell cellInicioEst = fila.getCell(19);
+        Cell cellFinEst = fila.getCell(20);
+
+        String fechaInicioEstudios = ScriptGeneratorUtil.getCellString(cellInicioEst);
+        String fechaFinEstudios = ScriptGeneratorUtil.getCellString(cellFinEst);
         String duracionEstudios = ScriptGeneratorUtil.getCellString(fila.getCell(21));
 
-        String fechaInicioFin = ScriptGeneratorUtil.getCellString(fila.getCell(22));
-        String fechaFinFin = ScriptGeneratorUtil.getCellString(fila.getCell(23));
+        Cell cellInicioFin = fila.getCell(22);
+        Cell cellFinFin = fila.getCell(23);
+
+        String fechaInicioFin = ScriptGeneratorUtil.getCellString(cellInicioFin);
+        String fechaFinFin = ScriptGeneratorUtil.getCellString(cellFinFin);
         String duracionFin = ScriptGeneratorUtil.getCellString(fila.getCell(24));
 
         String presupuesto = ScriptGeneratorUtil.getCellString(fila.getCell(25));
@@ -111,8 +123,8 @@ public class ExcelRowValidator {
         // ================= VALIDACIÓN DE FECHAS =================
 
         // 🔥 FECHAS DE ESTUDIO
-        Timestamp inicioEst = parseTimestamp(fechaInicioEstudios);
-        Timestamp finEst = parseTimestamp(fechaFinEstudios);
+        Timestamp inicioEst = getCellTimestamp(cellInicioEst);
+        Timestamp finEst = getCellTimestamp(cellFinEst);
 
         if (inicioEst != null && finEst != null) {
             if (!finEst.after(inicioEst)) {
@@ -125,8 +137,8 @@ public class ExcelRowValidator {
         }
 
         // 🔥 FECHAS DE FINANCIAMIENTO
-        Timestamp inicioFinTs = parseTimestamp(fechaInicioFin);
-        Timestamp finFinTs = parseTimestamp(fechaFinFin);
+        Timestamp inicioFinTs = getCellTimestamp(cellInicioFin);
+        Timestamp finFinTs = getCellTimestamp(cellFinFin);
 
         if (inicioFinTs != null && finFinTs != null) {
             if (!finFinTs.after(inicioFinTs)) {
@@ -155,12 +167,54 @@ public class ExcelRowValidator {
         }
     }
 
+    private static Timestamp getCellTimestamp(Cell cell) {
+        try {
+            if (cell == null) return null;
+
+            // Fecha real de Excel
+            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                return new Timestamp(cell.getDateCellValue().getTime());
+            }
+
+            // Fórmula
+            if (cell.getCellType() == CellType.FORMULA) {
+                FormulaEvaluator evaluator = cell.getSheet()
+                        .getWorkbook()
+                        .getCreationHelper()
+                        .createFormulaEvaluator();
+
+                CellValue cellValue = evaluator.evaluate(cell);
+
+                if (cellValue.getCellType() == CellType.NUMERIC
+                        && DateUtil.isCellDateFormatted(cell)) {
+                    return new Timestamp(cell.getDateCellValue().getTime());
+                }
+            }
+
+            // Texto
+            String fecha = ScriptGeneratorUtil.getCellString(cell);
+            return parseTimestamp(fecha);
+
+        } catch (Exception e) {
+            return null;
+        }
+    }    
+
     private static Timestamp parseTimestamp(String fecha) {
         try {
-            if (fecha == null || fecha.isBlank()) return null;
+            if (fecha == null || fecha.isBlank()) {
+                return null;
+            }
+
             fecha = fecha.trim().replaceAll("\\s+", " ");
-            if (fecha.length() == 10) return Timestamp.valueOf(fecha + " 00:00:00");
+            fecha = fecha.replace("/", "-");
+
+            if (fecha.length() == 10) {
+                return Timestamp.valueOf(fecha + " 00:00:00");
+            }
+
             return Timestamp.valueOf(fecha);
+
         } catch (Exception e) {
             return null;
         }
