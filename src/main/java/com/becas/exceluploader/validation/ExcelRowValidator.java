@@ -51,13 +51,13 @@ public class ExcelRowValidator {
         validarTexto(errores, criterio, rowIndex, "Criterio Técnico");
         validarTexto(errores, analista, rowIndex, "Analista");
 
-        validarNumero(errores, nivelEstudio, rowIndex, "Nivel de estudio");
-        validarNumero(errores, campoDetallado, rowIndex, "Campo detallado");
-        validarNumero(errores, carrera, rowIndex, "Carrera");
-        validarNumero(errores, universidad, rowIndex, "Universidad");
-        validarNumero(errores, pais, rowIndex, "País");
-        validarNumero(errores, titulo, rowIndex, "Título");
-        validarNumero(errores, idioma, rowIndex, "Idioma");
+        validarTexto(errores, ScriptGeneratorUtil.getCellString(fila.getCell(10)), rowIndex, "Nivel de estudio");
+        validarTexto(errores, ScriptGeneratorUtil.getCellString(fila.getCell(13)), rowIndex, "Campo detallado");
+        validarTexto(errores, ScriptGeneratorUtil.getCellString(fila.getCell(14)), rowIndex, "Carrera");
+        validarTexto(errores, ScriptGeneratorUtil.getCellString(fila.getCell(15)), rowIndex, "Universidad");
+        validarTexto(errores, ScriptGeneratorUtil.getCellString(fila.getCell(16)), rowIndex, "País");
+        validarTexto(errores, ScriptGeneratorUtil.getCellString(fila.getCell(17)), rowIndex, "Título");
+        validarTexto(errores, ScriptGeneratorUtil.getCellString(fila.getCell(18)), rowIndex, "Idioma");
 
         validarTexto(errores, fechaInicioEstudios, rowIndex, "Fecha inicio estudios");
         validarTexto(errores, fechaFinEstudios, rowIndex, "Fecha fin estudios");

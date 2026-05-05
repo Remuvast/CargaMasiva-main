@@ -66,14 +66,60 @@ public class ScriptGeneratorUtil {
         if (cell == null) return 0L;
 
         try {
-            if (cell.getCellType() == CellType.NUMERIC) {
-                return (long) cell.getNumericCellValue();
+
+            switch (cell.getCellType()) {
+
+                case NUMERIC:
+                    double num = cell.getNumericCellValue();
+
+                    if (num % 1 != 0) return 0L;
+
+                    return (long) num;
+
+                case STRING:
+                    String valor = cell.getStringCellValue().trim().replace(",", ".");
+
+                    if (valor.isBlank()) return 0L;
+
+                    double d = Double.parseDouble(valor);
+
+                    if (d % 1 != 0) return 0L;
+
+                    return (long) d;
+
+                case FORMULA:
+                    FormulaEvaluator evaluator = cell.getSheet()
+                            .getWorkbook()
+                            .getCreationHelper()
+                            .createFormulaEvaluator();
+
+                    CellValue cellValue = evaluator.evaluate(cell);
+
+                    if (cellValue.getCellType() == CellType.NUMERIC) {
+                        double n = cellValue.getNumberValue();
+
+                        if (n % 1 != 0) return 0L;
+
+                        return (long) n;
+                    }
+
+                    if (cellValue.getCellType() == CellType.STRING) {
+                        String val = cellValue.getStringValue().trim().replace(",", ".");
+
+                        if (val.isBlank()) return 0L;
+
+                        double n = Double.parseDouble(val);
+
+                        if (n % 1 != 0) return 0L;
+
+                        return (long) n;
+                    }
+
+                    return 0L;
+
+                default:
+                    return 0L;
             }
-
-            String valor = getCellString(cell);
-            if (valor.isBlank()) return 0L;
-
-            return Long.parseLong(valor);
 
         } catch (Exception e) {
             return 0L;

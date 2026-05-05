@@ -367,39 +367,97 @@ public class ExcelProcessingService {
                     }
 
                     // FK VALIDACIONES
-                    Long nivel = getCellLong(fila.getCell(10));
-                    if (nivel != null && nivel > 0 && !nivelesValidos.contains(nivel)) {
-                        errores.add(new ValidationError(i + 1, "Nivel de estudio", "No existe en catálogo"));
+                    // Nivel de Estudio
+                    Cell cellNivel = fila.getCell(10);
+                    String valorNivel = getCellString(cellNivel);
+                    Long nivel = getCellLong(cellNivel);
+
+                    if (valorNivel != null && !valorNivel.isBlank()) {
+                        if (!esEnteroValido(cellNivel)) {
+                            errores.add(new ValidationError(i + 1, "Nivel de estudio", "Debe ser un número entero"));
+                        } else if (nivel > 0 && !nivelesValidos.contains(nivel)) {
+                            errores.add(new ValidationError(i + 1, "Nivel de estudio", "No existe en catálogo"));
+                        }
                     }
 
-                    Long area = getCellLong(fila.getCell(13));
-                    if (area != null && area > 0 && !areasValidas.contains(area)) {
-                        errores.add(new ValidationError(i + 1, "Área de estudio", "No existe en catálogo"));
+                    // Área de estudio
+                    Cell cellArea = fila.getCell(13);
+                    String valorArea = getCellString(cellArea);
+                    Long area = getCellLong(cellArea);
+
+                    if (valorArea != null && !valorArea.isBlank()) {
+                        if (!esEnteroValido(cellArea)) {
+                            errores.add(new ValidationError(i + 1, "Área de estudio", "Debe ser un número entero"));
+                        } else if (area > 0 && !areasValidas.contains(area)) {
+                            errores.add(new ValidationError(i + 1, "Área de estudio", "No existe en catálogo"));
+                        }
                     }
 
-                    Long carrera = getCellLong(fila.getCell(14));
-                    if (carrera != null && carrera > 0 && !carrerasValidas.contains(carrera)) {
-                        errores.add(new ValidationError(i + 1, "Carrera", "No existe en catálogo"));
+                    // Carrera
+                    Cell cellCarrera = fila.getCell(14);
+                    String valorCarrera = getCellString(cellCarrera);
+                    Long carrera = getCellLong(cellCarrera);
+
+                    if (valorCarrera != null && !valorCarrera.isBlank()) {
+                        if (!esEnteroValido(cellCarrera)) {
+                            errores.add(new ValidationError(i + 1, "Carrera", "Debe ser un número entero"));
+                        } else if (carrera > 0 && !carrerasValidas.contains(carrera)) {
+                            errores.add(new ValidationError(i + 1, "Carrera", "No existe en catálogo"));
+                        }
                     }
 
-                    Long universidad = getCellLong(fila.getCell(15));
-                    if (universidad != null && universidad > 0 && !universidadesValidas.contains(universidad)) {
-                        errores.add(new ValidationError(i + 1, "Institución Educativa", "No existe en catálogo"));
+                    // Institución educativa
+                    Cell cellUniversidad = fila.getCell(15);
+                    String valorUniversidad = getCellString(cellUniversidad);
+                    Long universidad = getCellLong(cellUniversidad);
+
+                    if (valorUniversidad != null && !valorUniversidad.isBlank()) {
+                        if (!esEnteroValido(cellUniversidad)) {
+                            errores.add(new ValidationError(i + 1, "Institución Educativa", "Debe ser un número entero"));
+                        } else if (universidad > 0 && !universidadesValidas.contains(universidad)) {
+                            errores.add(new ValidationError(i + 1, "Institución Educativa", "No existe en catálogo"));
+                        }
                     }
 
-                    Long pais = getCellLong(fila.getCell(16));
-                    if (pais != null && pais > 0 && !paisesValidos.contains(pais)) {
-                        errores.add(new ValidationError(i + 1, "País", "No existe en catálogo"));
+                    // País
+                    Cell cellPais = fila.getCell(16);
+                    String valorPais = getCellString(cellPais);
+                    Long pais = getCellLong(cellPais);
+
+                    if (valorPais != null && !valorPais.isBlank()) {
+
+                        if (!esEnteroValido(cellPais)) {
+                            errores.add(new ValidationError(i + 1, "País", "Debe ser un número entero"));
+                        } else if (pais > 0 && !paisesValidos.contains(pais)) {
+                            errores.add(new ValidationError(i + 1, "País", "No existe en catálogo"));
+                        }
+
                     }
 
-                    Long titulo = getCellLong(fila.getCell(17));
-                    if (titulo != null && titulo > 0 && !titulosValidos.contains(titulo)) {
-                        errores.add(new ValidationError(i + 1, "Título", "No existe en catálogo"));
+                    // Título
+                    Cell cellTitulo = fila.getCell(17);
+                    String valorTitulo = getCellString(cellTitulo);
+                    Long titulo = getCellLong(cellTitulo);
+
+                    if (valorTitulo != null && !valorTitulo.isBlank()) {
+                        if (!esEnteroValido(cellTitulo)) {
+                            errores.add(new ValidationError(i + 1, "Título", "Debe ser un número entero"));
+                        } else if (titulo > 0 && !titulosValidos.contains(titulo)) {
+                            errores.add(new ValidationError(i + 1, "Título", "No existe en catálogo"));
+                        }
                     }
 
-                    Long idioma = getCellLong(fila.getCell(18));
-                    if (idioma != null && idioma > 0 && !idiomasValidos.contains(idioma)) {
-                        errores.add(new ValidationError(i + 1, "Idioma", "No existe en catálogo"));
+                    // Idioma
+                    Cell cellIdioma = fila.getCell(18);
+                    String valorIdioma = getCellString(cellIdioma);
+                    Long idioma = getCellLong(cellIdioma);
+
+                    if (valorIdioma != null && !valorIdioma.isBlank()) {
+                        if (!esEnteroValido(cellIdioma)) {
+                            errores.add(new ValidationError(i + 1, "Idioma", "Debe ser un número entero"));
+                        } else if (idioma > 0 && !idiomasValidos.contains(idioma)) {
+                            errores.add(new ValidationError(i + 1, "Idioma", "No existe en catálogo"));
+                        }
                     }
 
                     // Validación cédula (solo si tiene valor)
@@ -747,11 +805,47 @@ public class ExcelProcessingService {
     private Long getCellLong(Cell cell) {
         try {
             if (cell == null) return 0L;
-            if (cell.getCellType() == CellType.NUMERIC)
-                return (long) cell.getNumericCellValue();
-            return Long.parseLong(cell.getStringCellValue().trim());
+
+            if (cell.getCellType() == CellType.NUMERIC) {
+                double num = cell.getNumericCellValue();
+
+                if (num % 1 != 0) return 0L;
+
+                return (long) num;
+            }
+
+            String valor = getCellString(cell);
+
+            if (valor == null || valor.isBlank()) return 0L;
+
+            valor = valor.trim().replace(",", ".");
+
+            double num = Double.parseDouble(valor);
+
+            if (num % 1 != 0) return 0L;
+
+            return (long) num;
+
         } catch (Exception e) {
             return 0L;
+        }
+    }
+
+    private boolean esEnteroValido(Cell cell) {
+        String valor = getCellString(cell);
+
+        if (valor == null || valor.isBlank()) {
+            return true; // vacío lo controla ExcelRowValidator
+        }
+
+        try {
+            valor = valor.trim().replace(",", ".");
+            double num = Double.parseDouble(valor);
+
+            return num % 1 == 0;
+
+        } catch (Exception e) {
+            return false;
         }
     }
 
