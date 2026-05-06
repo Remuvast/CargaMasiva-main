@@ -81,8 +81,34 @@ public class ExcelProcessingService {
                 AND sl.numero_identificacion = ?
             """;
 
+            String sqlValidaPrograma = """
+                SELECT 1
+                FROM programas
+                WHERE UPPER(TRIM(nombre_corto)) = UPPER(TRIM(?))
+                LIMIT 1
+            """;
+
+            String sqlValidaRubro = """
+                SELECT 1
+                FROM solicitudes so
+                JOIN solicitantes sl ON sl.id = so.solicitantes_id
+                JOIN programas p ON p.id = so.programas_id
+                JOIN programas_regiones pr ON pr.programas_id = p.id
+                JOIN programas_regiones_niv_est prne ON prne.programas_regiones_id = pr.id
+                JOIN programas_reg_niv_est_rub prner ON prner.programas_regiones_niv_est_id = prne.id
+                JOIN rubros r ON r.id = prner.rubros_id
+                WHERE UPPER(TRIM(p.nombre_corto)) = UPPER(TRIM(?))
+                AND prne.catalogos_niveles_estudio_id = ?
+                AND sl.numero_identificacion = ?
+                AND so.numero_tramite = ?
+                AND UPPER(TRIM(r.nombre)) = UPPER(TRIM(?))
+                LIMIT 1
+            """;
+
             try (PreparedStatement psValidaCedula = conn.prepareStatement(sqlValidaCedula);
                 PreparedStatement psValidaTramite = conn.prepareStatement(sqlValidaTramite);
+                PreparedStatement psValidaPrograma = conn.prepareStatement(sqlValidaPrograma);
+                PreparedStatement psValidaRubro = conn.prepareStatement(sqlValidaRubro);
 
                  PreparedStatement ps1 = conn.prepareStatement(""" 
                     UPDATE solicitudes so
@@ -130,7 +156,8 @@ public class ExcelProcessingService {
                     JOIN programas_regiones pr ON pr.programas_id = p.id
                     JOIN programas_regiones_niv_est prne ON prne.programas_regiones_id = pr.id
                     WHERE sl.numero_identificacion = ?
-                      AND so.numero_tramite = ?
+                        AND so.numero_tramite = ?
+                        AND prne.catalogos_niveles_estudio_id = ?
                     ON CONFLICT (solicitudes_id)
                     DO UPDATE SET
                         catalogos_nivel_estudio_id = EXCLUDED.catalogos_nivel_estudio_id,
@@ -161,7 +188,7 @@ public class ExcelProcessingService {
                       AND sl.id = so.solicitantes_id
                  """);
 
-                 PreparedStatement ps5 = conn.prepareStatement("""
+                PreparedStatement ps5 = conn.prepareStatement("""
                     INSERT INTO solicitudes_rubros (
                         solicitudes_id,
                         catalogos_periodicidad_id,
@@ -178,12 +205,19 @@ public class ExcelProcessingService {
                     JOIN programas_regiones_niv_est prne ON prne.programas_regiones_id = pr.id
                     JOIN programas_reg_niv_est_rub prner ON prner.programas_regiones_niv_est_id = prne.id
                     JOIN rubros r ON r.id = prner.rubros_id
-                    WHERE p.nombre_corto = ?
-                      AND prne.catalogos_niveles_estudio_id = ?
-                      AND sl.numero_identificacion = ?
-                      AND so.numero_tramite = ?
-                      AND r.nombre = ?
-                 """)
+                    WHERE UPPER(TRIM(p.nombre_corto)) = UPPER(TRIM(?))
+                    AND prne.catalogos_niveles_estudio_id = ?
+                    AND sl.numero_identificacion = ?
+                    AND so.numero_tramite = ?
+                    AND UPPER(TRIM(r.nombre)) = UPPER(TRIM(?))
+                    AND NOT EXISTS (
+                            SELECT 1
+                            FROM solicitudes_rubros sr
+                            WHERE sr.solicitudes_id = so.id
+                            AND sr.programas_reg_niv_est_rub_id = prner.id
+                    )
+                    LIMIT 1
+                """)
             ) {
 
                 boolean hayErroresGlobales = false;
@@ -466,7 +500,49 @@ public class ExcelProcessingService {
                             ));
                         }
                     }
-                    
+
+                    // Validación Programa
+                    String nombrePrograma = getCellString(fila.getCell(3));
+                    boolean programaValido = true;
+
+                    if (nombrePrograma != null) {
+                        nombrePrograma = nombrePrograma.trim().toUpperCase();
+                    }
+
+                    if (nombrePrograma != null && !nombrePrograma.isBlank()) {
+                        if (!existePrograma(psValidaPrograma, nombrePrograma)) {
+                            errores.add(new ValidationError(
+                                    i + 1,
+                                    "Programa",
+                                    "No existe en base de datos"
+                            ));
+                            programaValido = false;
+                        }
+                    }
+
+                    // Validación Rubro
+                    String nombreRubro = getCellString(fila.getCell(26));
+                    Long nivelRubro = getCellLong(fila.getCell(10));
+
+                    if (nombreRubro != null) {
+                        nombreRubro = nombreRubro.trim().toUpperCase();
+                    }
+
+                    if (programaValido
+                            && nombreRubro != null && !nombreRubro.isBlank()
+                            && nivelRubro != null && nivelRubro > 0
+                            && cedula != null && !cedula.isBlank()
+                            && tramite != null && !tramite.isBlank()) {
+
+                        if (!existeRubro(psValidaRubro, nombrePrograma, nivelRubro, cedula, tramite, nombreRubro)) {
+                            errores.add(new ValidationError(
+                                    i + 1,
+                                    "Rubro",
+                                    "No existe para el programa, nivel y solicitud"
+                            ));
+                        }
+                    }
+                                        
                     // ================= RESULTADO POR FILA =================
                     
                     if (!errores.isEmpty()) {
@@ -508,8 +584,18 @@ public class ExcelProcessingService {
 
                     String cedula = getCellString(fila.getCell(0));
                     String tramite = getCellString(fila.getCell(4));
+
                     String nombrePrograma = getCellString(fila.getCell(3));
                     String nombreRubro = getCellString(fila.getCell(26));
+
+                    //Validaciones Programa y Rubro
+                    if (nombrePrograma != null) {
+                        nombrePrograma = nombrePrograma.trim().toUpperCase();
+                    }
+
+                    if (nombreRubro != null) {
+                        nombreRubro = nombreRubro.trim().toUpperCase();
+                    }
 
                     Long nivel = getCellLong(fila.getCell(10));
                     Long area = getCellLong(fila.getCell(13));
@@ -558,6 +644,7 @@ public class ExcelProcessingService {
                     ps3.setBoolean(11, true);
                     ps3.setString(12, cedula);
                     ps3.setString(13, tramite);
+                    ps3.setLong(14, nivel);
                     ps3.addBatch();
 
                     // ps4
@@ -729,6 +816,25 @@ public class ExcelProcessingService {
     private boolean existeTramite(PreparedStatement ps, String tramite, String cedula) throws SQLException {
         ps.setString(1, tramite);
         ps.setString(2, cedula);
+        try (ResultSet rs = ps.executeQuery()) {
+            return rs.next();
+        }
+    }
+
+    private boolean existePrograma(PreparedStatement ps, String programa) throws SQLException {
+        ps.setString(1, programa);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            return rs.next();
+        }
+    }
+
+    private boolean existeRubro(PreparedStatement ps, String programa, Long nivel, String cedula, String tramite, String rubro) throws SQLException {
+        ps.setString(1, programa);
+        ps.setLong(2, nivel);
+        ps.setString(3, cedula);
+        ps.setString(4, tramite);
+        ps.setString(5, rubro);
         try (ResultSet rs = ps.executeQuery()) {
             return rs.next();
         }
