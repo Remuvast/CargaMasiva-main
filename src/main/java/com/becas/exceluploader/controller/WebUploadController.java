@@ -42,12 +42,6 @@ public class WebUploadController {
         return "CargaInformacion";
     }
 
-    // 🔹 FORMULARIO RECHAZO MASIVO
-    @GetMapping("/rechazo")
-    public String mostrarRechazo() {
-        return "RechazoInformacion";
-    }
-
     // 🔹 PROCESO DE CARGA
     @PostMapping("/upload")
     public String handleFileUpload(

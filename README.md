@@ -1,193 +1,272 @@
-# ğŸ“¥ Carga Masiva con BotÃ³n - Proyecto Spring Boot
+# Carga Masiva de Informaci¨®n ¨C Plataforma Inform¨¢tica PUSAK
 
-Este proyecto permite realizar una **carga masiva de datos** desde un archivo Excel mediante un botÃ³n en la interfaz web. El backend estÃ¡ desarrollado en **Spring Boot** y utiliza **Apache POI** para leer archivos `.xlsx`, facilitando la inserciÃ³n y validaciÃ³n de datos en la base de datos.
+Aplicaci¨®n desarrollada en **Spring Boot** para realizar la **carga masiva de informaci¨®n desde archivos Excel** en el m¨®dulo de **Postulaci¨®n de Becas** de la **Plataforma Inform¨¢tica PUSAK**.
 
----
+El sistema permite:
 
-## ğŸš€ TecnologÃ­as Usadas
-
-- **Java 17+**
-- **Spring Boot**
-- **Apache POI** (para manejar archivos Excel)
-- **PostgreSQL** (u otra base de datos SQL)
-- **Docker** y **Docker Compose**
-- **Make** (para automatizaciÃ³n)
-- **Maven** (para la gestiÃ³n de dependencias y construcciÃ³n)
-- (Frontend: **Thymeleaf** o **Angular**, segÃºn la implementaciÃ³n)
+- Cargar archivos Excel (`.xlsx`, `.xls`)
+- Validar extensi¨®n y tama?o del archivo
+- Procesar la informaci¨®n en backend
+- Registrar los datos en base de datos PostgreSQL
+- Mostrar mensajes de resultado en interfaz web
 
 ---
 
-## ğŸ“ Estructura del Proyecto
+## Descripci¨®n General
 
-La estructura del proyecto es similar a la siguiente:
+La aplicaci¨®n expone una interfaz web construida con **Thymeleaf**, desde donde el usuario puede:
 
-```
-.
-â”œâ”€â”€ src
-â”‚   â”œâ”€â”€ main
-â”‚   â”‚   â”œâ”€â”€ java
-â”‚   â”‚   â””â”€â”€ resources
-â”‚   â”‚       â”œâ”€â”€ application.yml
-â”‚   â”‚       â”œâ”€â”€ static
-â”‚   â”‚       â””â”€â”€ templates
-â”œâ”€â”€ Dockerfile
-â”œâ”€â”€ docker-compose.yml
-â”œâ”€â”€ Makefile
-â””â”€â”€ README.md
-```
+- Ingresar al men¨² principal
+- Acceder al m¨®dulo de **Carga Masiva**
+- Acceder al m¨®dulo de **Rechazo Masivo**
+- Subir archivos Excel para procesamiento
+
+El sistema est¨¢ preparado para ejecutarse en:
+
+- **Ambiente local**
+- **Ambiente de preproducci¨®n**
+
+mediante perfiles de configuraci¨®n de **Spring Boot**.
 
 ---
 
-## âš™ï¸ InstalaciÃ³n y EjecuciÃ³n
+## Tecnolog¨ªas Utilizadas
 
-### 1. Clonar el Repositorio
+- **Java 17**
+- **Spring Boot 3.4.5**
+- **Spring Data JPA**
+- **Spring Web**
+- **Thymeleaf**
+- **Apache POI**
+- **PostgreSQL**
+- **Docker**
+- **Docker Compose**
+- **Maven**
 
-```bash
-git clone https://github.com/usuario/carga-masiva-boton.git
-cd carga-masiva-boton
-```
+---
 
-### 2. Configurar la Base de Datos
+## Estructura General del Proyecto
 
-Edita el archivo `application.yml` (o `application.properties`) ubicado en `src/main/resources` para configurar los datos de conexiÃ³n a tu base de datos. Por ejemplo, para PostgreSQL:
+CargaMasiva-main/
+©À©¤©¤ src/
+©¦   ©À©¤©¤ main/
+©¦   ©¦   ©À©¤©¤ java/
+©¦   ©¦   ©¸©¤©¤ resources/
+©¦   ©¦       ©À©¤©¤ static/
+©¦   ©¦       ©¦   ©¸©¤©¤ images/
+©¦   ©¦       ©À©¤©¤ templates/
+©¦   ©¦       ©¦   ©À©¤©¤ fragments/
+©¦   ©¦       ©¦   ©À©¤©¤ CargaInformacion.html
+©¦   ©¦       ©¦   ©À©¤©¤ IndexCargaInformacion.html
+©¦   ©¦       ©¦   ©¸©¤©¤ RechazoInformacion.html
+©¦   ©¦       ©À©¤©¤ application.properties
+©¦   ©¦       ©¸©¤©¤ application-pre.properties
+©¦   ©¸©¤©¤ test/
+©À©¤©¤ Dockerfile
+©À©¤©¤ docker-compose.yml
+©À©¤©¤ docker-compose.pre.yml
+©À©¤©¤ Makefile
+©¸©¤©¤ pom.xml
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/tu_basededatos
-    username: tu_usuario
-    password: tu_contraseÃ±a
-```
 
-### 3. Levantar el Proyecto
 
-Utiliza el `Makefile` incluido para automatizar el proceso. Ejecuta el siguiente comando:
+## Configuraci¨®n de Ambientes
+## Ambiente Local
 
-```bash
+Archivo:
+
+src/main/resources/application.properties
+
+**Configuraci¨®n principal:**
+
+Puerto: 8083
+Base de datos local
+Directorio de carga local
+URL de login local
+
+
+## Ambiente Preproducci¨®n
+
+Archivo:
+
+src/main/resources/application-pre.properties
+
+Se activa mediante:
+
+SPRING_PROFILES_ACTIVE=pre
+
+**Configuraci¨®n principal:**
+
+Base de datos de preproducci¨®n
+Ruta Linux para archivos cargados
+URL de login de ambiente PUSAK TEST
+Ejecuci¨®n en Ambiente Local
+**1. Compilar el proyecto
+mvn clean package -DskipTests
+**2. Ejecutar con Docker
+docker-compose up --build
+**3. Acceder al sistema
+
+Men¨² principal:
+
+http://localhost:8083/menu
+
+Carga masiva:
+
+http://localhost:8083/carga
+
+**Ejecuci¨®n en Preproducci¨®n**
+
+Utilizar:
+
+docker-compose -f docker-compose.pre.yml up --build
+
+Este despliegue utiliza autom¨¢ticamente el perfil:
+
+pre
+
+**Uso del Sistema**
+Men¨² principal
+
+Desde la pantalla inicial el usuario puede seleccionar:
+
+Carga Masiva
+Rechazo Masivo
+Carga Masiva
+
+Flujo de uso:
+
+Ingresar al m¨®dulo
+Seleccionar archivo Excel
+Presionar Subir y Procesar
+Esperar validaci¨®n y procesamiento
+Revisar resultado mostrado en pantalla
+Validaciones de Archivo
+
+El sistema valida en frontend:
+
+Extensiones permitidas
+.xlsx
+.xls
+Tama?o m¨¢ximo
+20 MB
+
+Si el archivo no cumple las reglas, se bloquea el env¨ªo y se muestra mensaje de validaci¨®n.
+
+**Ubicaci¨®n de Archivos Subidos**
+Local
+/app/data/archivos_subidos_carga_masiva
+
+Mapeado desde Docker hacia la carpeta local definida en:
+
+docker-compose.yml
+Preproducci¨®n
+/data/archivos_subidos_carga_masiva
+
+**Recursos Visuales**
+
+Las im¨¢genes institucionales se encuentran en:
+
+src/main/resources/static/images/
+
+Archivos actuales:
+
+logoizquierda.jpg
+logoderecha.jpg
+piederecha.png
+
+Se utilizan en los fragmentos:
+
+templates/fragments/header.html
+templates/fragments/footer.html
+
+## Docker
+**Dockerfile**
+
+El proyecto usa construcci¨®n por etapas:
+
+Etapa 1
+
+Compilaci¨®n con Maven
+
+Etapa 2
+
+Ejecuci¨®n con Java 17
+
+Puerto expuesto:
+
+8083
+
+**Docker Compose**
+**Local**
+
+Archivo:
+
+docker-compose.yml
+
+Contenedor:
+
+springboot-excel
+Preproducci¨®n
+
+Archivo:
+
+docker-compose.pre.yml
+
+Contenedor:
+
+springboot-excel-pre
+Comandos ¨²tiles
+Levantar contenedor local
+docker-compose up --build
+Detener contenedor
+docker-compose down
+Ver logs
+docker-compose logs -f
+
+**Levantar preproducci¨®n**
+docker-compose -f docker-compose.pre.yml up --build
+Makefile
+
+El proyecto incluye automatizaci¨®n b¨¢sica mediante Makefile.
+
+Comandos disponibles
+Construcci¨®n
+make build
+Levantar contenedor
 make up
-```
+Detener contenedor
+make down
+Reiniciar
+make restart
+Ver logs
+make logs
+Estado de contenedores
+make ps
+Limpieza
+make clean
 
-Este comando:
-- Verifica que el puerto `8083` estÃ© disponible.
-- Construye la imagen Docker usando Maven.
-- Levanta el contenedor con Docker Compose.
+## Base de Datos
+**Motor utilizado:**
 
----
+PostgreSQL
 
-## ğŸ–±ï¸ Uso del Sistema
+**Configurado mediante:**
 
-1. Accede a la aplicaciÃ³n en: `http://localhost:8083/carga`
-2. Selecciona un archivo Excel (`.xlsx`) que contenga la informaciÃ³n a cargar.
-3. Haz clic en **"Subir y procesar"**.
-4. El backend valida e inserta (o actualiza) los datos en la base de datos.
-5. Se muestran mensajes de confirmaciÃ³n o error tanto en la interfaz web como en los logs del contenedor.
+spring.datasource.url
+spring.datasource.username
+spring.datasource.password
+Observaciones T¨¦cnicas
+El frontend est¨¢ construido con Thymeleaf
+Los archivos Excel son procesados con Apache POI
+El sistema utiliza Spring Boot multipart upload
+El proyecto soporta separaci¨®n de configuraci¨®n por perfiles
+Las cargas quedan persistidas f¨ªsicamente en disco
+Recomendaciones de Despliegue
 
----
+Antes de pasar a preproducci¨®n se recomienda verificar:
 
-## ğŸ“„ Formato Esperado del Archivo Excel
-
-El archivo Excel debe tener un formato similar al siguiente:
-
-| CÃ©dula        | Nombre Completo     | Rubro               | Presupuesto |
-|---------------|---------------------|---------------------|-------------|
-| 0928228196    | Juan PÃ©rez          | MANUTENCION BECARIO | 798.31      |
-| 0951576784    | MarÃ­a Estrella      | MATRÃCULA           | 500.00      |
-
-AsegÃºrate de que:
-- Los campos obligatorios estÃ©n completos.
-- Los datos sigan el formato definido (especialmente nÃºmeros y fechas).
-
----
-
-## ğŸ› ï¸ Makefile: AutomatizaciÃ³n y GestiÃ³n con Docker
-
-El proyecto incluye un `Makefile` para simplificar tareas comunes durante el desarrollo y despliegue.
-
-### Contenido del Makefile
-
-```makefile
-# Nombre del contenedor (segÃºn docker-compose.yml)
-SERVICE=springboot-excel
-
-# Verifica si el puerto 8083 estÃ¡ ocupado
-check-port:
-	@echo "ğŸ” Verificando puerto 8083..."
-	@if lsof -i :8083 >/dev/null 2>&1; then \
-		echo "âŒ El puerto 8083 ya estÃ¡ en uso. DetÃ©n el proceso o cambia el puerto."; \
-		exit 1; \
-	else \
-		echo "âœ… Puerto 8083 disponible."; \
-	fi
-
-build:
-	@echo "ğŸ”¨ Construyendo imagen..."
-	docker-compose build
-	docker run --rm -e MAVEN_OPTS="-Dhttps.protocols=TLSv1.2" -v $(PWD):/app -w /app maven:3.9.4-eclipse-temurin-17 mvn clean package -DskipTests
-
-# Levanta el contenedor con build
-up: check-port
-	@echo "ğŸš€ Levantando el contenedor..."
-	docker-compose up --build
-	mvn clean install
-
-# Baja el contenedor
-down:
-	@echo "ğŸ›‘ Deteniendo contenedor..."
-	docker-compose down
-
-# Reinicia el contenedor (con build)
-restart: down up
-
-# Muestra logs en tiempo real
-logs:
-	docker-compose logs -f $(SERVICE)
-
-# Estado de los contenedores
-ps:
-	docker-compose ps
-
-# Elimina todo rastro del contenedor e imagen
-clean:
-	@echo "ğŸ§¹ Limpiando contenedores e imÃ¡genes..."
-	docker-compose down --volumes --remove-orphans
-	docker rmi -f $$(docker images -q) || true
-
-# Ayuda
-help:
-	@echo "Comandos disponibles:"
-	@echo "  make build     â†’ Construye la imagen"
-	@echo "  make up        â†’ Verifica puerto y levanta contenedor"
-	@echo "  make down      â†’ Detiene el contenedor"
-	@echo "  make restart   â†’ Reinicia todo con build"
-	@echo "  make logs      â†’ Muestra los logs en tiempo real"
-	@echo "  make ps        â†’ Muestra estado de los servicios"
-	@echo "  make clean     â†’ Elimina contenedor, volÃºmenes e imÃ¡genes"
-```
-
-### Comandos Principales
-
-- **make build**: Construye la imagen Docker y compila el proyecto con Maven.
-- **make up**: Verifica la disponibilidad del puerto 8083, levanta el contenedor y ejecuta la aplicaciÃ³n.
-- **make down**: Detiene el contenedor.
-- **make restart**: Reinicia el contenedor, realizando primero un down y luego un up.
-- **make logs**: Muestra los logs en tiempo real del servicio.
-- **make ps**: Muestra el estado de los contenedores.
-- **make clean**: Elimina contenedores, volÃºmenes e imÃ¡genes para una limpieza completa.
-- **make help**: Muestra la lista de comandos disponibles.
-
----
-
-## ğŸ§¾ Logs y Manejo de Errores
-
-- Los mensajes de validaciÃ³n y errores se muestran en la interfaz de usuario.
-- Se pueden revisar en la consola Docker usando el comando `make logs`.
-- Los logs del backend facilitan la trazabilidad de cada proceso de carga.
-
----
-
----
-
-## ğŸ“ Licencia
-
-Este proyecto se distribuye bajo la licencia MIT.
-"# CargaMasiva-main" 
+Acceso a base de datos
+Permisos de escritura en /data
+Disponibilidad del puerto 8083
+Correcta resoluci¨®n de URL del sistema PUSAK

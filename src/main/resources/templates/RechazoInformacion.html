@@ -200,13 +200,13 @@
     <h1 class="titulo-sistema">Postulación - Rechazo masivo</h1>
     <h2>Subida de archivo Excel</h2>
 
-    <form method="post" enctype="multipart/form-data" action="/upload">
+    <form method="post" enctype="multipart/form-data" action="/rechazo/procesar">
         <input type="file"
-            name="file"
-            accept=".xlsx,.xls"
+            name="archivo"
+            accept=".xlsx,.xls"S
             required
             onchange="validarArchivo(this)" />
-        <button type="submit" disabled="disabled">Subir y Procesar</button>
+        <button type="submit">Subir y Procesar</button>
     </form>
 
     <div id="loadingBox" style="display:none; text-align:center; margin-top:20px;">
@@ -242,6 +242,7 @@
 
 <script>
 function limpiarResultado() {
+
     const resultado = document.getElementById('resultadoDiv');
 
     if (resultado) {
@@ -261,6 +262,7 @@ function validarArchivo(input) {
 
     // Validar extensión
     if (!nombre.endsWith(".xlsx") && !nombre.endsWith(".xls")) {
+
         alert("❌ Solo se permiten archivos Excel (.xlsx o .xls)");
         input.value = "";
         return false;
@@ -268,22 +270,35 @@ function validarArchivo(input) {
 
     // Validar tamaño
     if (file.size > maxSize) {
+
         alert("❌ El archivo supera los 20MB permitidos.");
         input.value = "";
         return false;
     }
 
     limpiarResultado();
+
     return true;
 }
 
-    document.querySelector("form").addEventListener("submit", function() {
+document.querySelector("form").addEventListener("submit", function(event) {
 
-        document.getElementById("loadingBox").style.display = "block";
+    const fileInput = document.querySelector('input[type="file"]');
 
-    });
+    // Validar si no seleccionó archivo
+    if (!fileInput.files.length) {
 
+        event.preventDefault();
+
+        alert("⚠️ Seleccione un archivo.");
+
+        return false;
+    }
+
+    document.getElementById("loadingBox").style.display = "block";
+});
 </script>
+
 
 <!-- FOOTER -->
 <div th:replace="fragments/footer :: footer"></div>
