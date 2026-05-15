@@ -10,6 +10,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
+import org.springframework.beans.factory.annotation.Value;
+
 @Service
 public class RechazoMasivoService {
 
@@ -40,6 +47,9 @@ public class RechazoMasivoService {
         }
 
     private final JdbcTemplate jdbcTemplate;
+
+    @Value("${app.upload.dir.rechazo}")
+    private String uploadDir;
 
     public RechazoMasivoService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -320,6 +330,9 @@ public class RechazoMasivoService {
 
                 resultado.append("✔️ Procesados: ")
                         .append(procesados);
+
+                guardarArchivoServidor(archivo);
+                
             }
 
         return resultado.toString();
@@ -389,13 +402,37 @@ public class RechazoMasivoService {
     }
 
     private String getValor(Cell cell) {
-        
-        if (cell == null) {
-            return "";
+            
+            if (cell == null) {
+                return "";
+            }
+
+        DataFormatter formatter = new DataFormatter();
+
+        return formatter.formatCellValue(cell).trim();
         }
 
-    DataFormatter formatter = new DataFormatter();
+        private void guardarArchivoServidor(MultipartFile archivo) throws Exception {
 
-    return formatter.formatCellValue(cell).trim();
+        Path carpeta = Paths.get(uploadDir).toAbsolutePath().normalize();
+
+        if (!Files.exists(carpeta)) {
+            Files.createDirectories(carpeta);
+        }
+
+        String archivoOriginal = archivo.getOriginalFilename();
+
+        String fechaHora = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+
+        String nombre = fechaHora + "_" + archivoOriginal;
+
+        Path destino = carpeta.resolve(nombre);
+
+        Files.copy(
+                archivo.getInputStream(),
+                destino,
+                StandardCopyOption.REPLACE_EXISTING
+        );
     }
 }
