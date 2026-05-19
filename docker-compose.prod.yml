@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    container_name: springboot-excel-prod
+    ports:
+      - "8083:8083"
+    restart: always
+    volumes:
+      - /data:/data
+    environment:
+      - TZ=America/Guayaquil
+      - SPRING_PROFILES_ACTIVE=pre
