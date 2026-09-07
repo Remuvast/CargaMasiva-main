@@ -6,7 +6,7 @@ services:
       - "8083:8083"
     restart: always
     volumes:
-      - /data:/data
+      - /data:/data:Z
     environment:
       - TZ=America/Guayaquil
       - SPRING_PROFILES_ACTIVE=pre
