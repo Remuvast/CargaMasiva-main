@@ -34,3 +34,7 @@ build/
 
 ### Para descarga de paquetes maven ###
 settings.xml
+
+### No subir archivos de configuración de Producción ###
+docker-compose.prod.yml
+application-prod.properties
