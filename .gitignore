@@ -38,3 +38,11 @@ settings.xml
 ### No subir archivos de configuración de Producción ###
 docker-compose.prod.yml
 application-prod.properties
+
+### No subir archivos de configuración de Pre-Producción ###
+docker-compose.pre.yml
+application-pre.properties
+
+### No subir archivos de configuración de Local ###
+docker-compose.yml
+application.properties
