@@ -46,3 +46,6 @@ application-pre.properties
 ### No subir archivos de configuración de Local ###
 docker-compose.yml
 application.properties
+
+### No subir archivo de configuración ###
+Dockerfile - PRE y PRO (aumenta -s settings.xml)
