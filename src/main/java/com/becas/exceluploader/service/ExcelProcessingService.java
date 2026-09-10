@@ -133,7 +133,28 @@ public class ExcelProcessingService {
                       AND so.numero_tramite = ?
                  """);
 
-                 PreparedStatement ps3 = conn.prepareStatement("""
+                PreparedStatement ps3Update = conn.prepareStatement("""
+                    UPDATE solicitudes_datos_estudio sde
+                    SET
+                        catalogos_nivel_estudio_id = ?,
+                        areas_estudio_id = ?,
+                        carreras_id = ?,
+                        universidades_id = ?,
+                        ubicaciones_geograficas_id = ?,
+                        catalogos_titulo_id = ?,
+                        catalogos_idioma_estudio_id = ?,
+                        fecha_inicio_estudios = ?,
+                        fecha_fin_estudios = ?,
+                        duracion_estudios = ?,
+                        estado = ?
+                    FROM solicitudes so
+                    JOIN solicitantes sl ON sl.id = so.solicitantes_id
+                    WHERE sde.solicitudes_id = so.id
+                    AND sl.numero_identificacion = ?
+                    AND so.numero_tramite = ?
+                """);
+
+                PreparedStatement ps3Insert = conn.prepareStatement("""
                     INSERT INTO solicitudes_datos_estudio (
                         solicitudes_id,
                         programas_regiones_niv_est_id,
@@ -156,22 +177,14 @@ public class ExcelProcessingService {
                     JOIN programas_regiones pr ON pr.programas_id = p.id
                     JOIN programas_regiones_niv_est prne ON prne.programas_regiones_id = pr.id
                     WHERE sl.numero_identificacion = ?
-                        AND so.numero_tramite = ?
-                        AND prne.catalogos_niveles_estudio_id = ?
-                    ON CONFLICT (solicitudes_id)
-                    DO UPDATE SET
-                        catalogos_nivel_estudio_id = EXCLUDED.catalogos_nivel_estudio_id,
-                        areas_estudio_id = EXCLUDED.areas_estudio_id,
-                        carreras_id = EXCLUDED.carreras_id,
-                        universidades_id = EXCLUDED.universidades_id,
-                        ubicaciones_geograficas_id = EXCLUDED.ubicaciones_geograficas_id,
-                        catalogos_titulo_id = EXCLUDED.catalogos_titulo_id,
-                        catalogos_idioma_estudio_id = EXCLUDED.catalogos_idioma_estudio_id,
-                        fecha_inicio_estudios = EXCLUDED.fecha_inicio_estudios,
-                        fecha_fin_estudios = EXCLUDED.fecha_fin_estudios,
-                        duracion_estudios = EXCLUDED.duracion_estudios,
-                        estado = EXCLUDED.estado
-                 """);
+                    AND so.numero_tramite = ?
+                    AND prne.catalogos_niveles_estudio_id = ?
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM solicitudes_datos_estudio sde
+                        WHERE sde.solicitudes_id = so.id
+                    )
+                """);
 
                  PreparedStatement ps4 = conn.prepareStatement(""" 
                     UPDATE solicitudes so
@@ -631,21 +644,38 @@ public class ExcelProcessingService {
                     ps2.addBatch();
 
                     // ps3
-                    ps3.setLong(1, nivel);
-                    ps3.setLong(2, area);
-                    ps3.setLong(3, carrera);
-                    ps3.setLong(4, universidad);
-                    ps3.setLong(5, pais);
-                    ps3.setLong(6, titulo);
-                    ps3.setLong(7, idioma);
-                    ps3.setTimestamp(8, getCellTimestamp(fila.getCell(19)));
-                    ps3.setTimestamp(9, getCellTimestamp(fila.getCell(20)));
-                    ps3.setString(10, duracionEstudios);
-                    ps3.setBoolean(11, true);
-                    ps3.setString(12, cedula);
-                    ps3.setString(13, tramite);
-                    ps3.setLong(14, nivel);
-                    ps3.addBatch();
+                    // UPDATE si el registro ya existe
+                    ps3Update.setLong(1, nivel);
+                    ps3Update.setLong(2, area);
+                    ps3Update.setLong(3, carrera);
+                    ps3Update.setLong(4, universidad);
+                    ps3Update.setLong(5, pais);
+                    ps3Update.setLong(6, titulo);
+                    ps3Update.setLong(7, idioma);
+                    ps3Update.setTimestamp(8, getCellTimestamp(fila.getCell(19)));
+                    ps3Update.setTimestamp(9, getCellTimestamp(fila.getCell(20)));
+                    ps3Update.setString(10, duracionEstudios);
+                    ps3Update.setBoolean(11, true);
+                    ps3Update.setString(12, cedula);
+                    ps3Update.setString(13, tramite);
+                    ps3Update.addBatch();
+
+                    // INSERT si el registro no existe
+                    ps3Insert.setLong(1, nivel);
+                    ps3Insert.setLong(2, area);
+                    ps3Insert.setLong(3, carrera);
+                    ps3Insert.setLong(4, universidad);
+                    ps3Insert.setLong(5, pais);
+                    ps3Insert.setLong(6, titulo);
+                    ps3Insert.setLong(7, idioma);
+                    ps3Insert.setTimestamp(8, getCellTimestamp(fila.getCell(19)));
+                    ps3Insert.setTimestamp(9, getCellTimestamp(fila.getCell(20)));
+                    ps3Insert.setString(10, duracionEstudios);
+                    ps3Insert.setBoolean(11, true);
+                    ps3Insert.setString(12, cedula);
+                    ps3Insert.setString(13, tramite);
+                    ps3Insert.setLong(14, nivel);
+                    ps3Insert.addBatch();
 
                     // ps4
                     ps4.setTimestamp(1, getCellTimestamp(fila.getCell(22)));
@@ -675,13 +705,15 @@ public class ExcelProcessingService {
 
                         ps1.executeBatch();
                         ps2.executeBatch();
-                        ps3.executeBatch();
+                        ps3Update.executeBatch();
+                        ps3Insert.executeBatch();
                         ps4.executeBatch();
                         ps5.executeBatch();
 
                         ps1.clearBatch();
                         ps2.clearBatch();
-                        ps3.clearBatch();
+                        ps3Update.clearBatch();
+                        ps3Insert.clearBatch();
                         ps4.clearBatch();
                         ps5.clearBatch();
 
@@ -692,13 +724,15 @@ public class ExcelProcessingService {
 
                 ps1.executeBatch();
                 ps2.executeBatch();
-                ps3.executeBatch();
+                ps3Update.executeBatch();
+                ps3Insert.executeBatch();
                 ps4.executeBatch();
                 ps5.executeBatch();
 
                 ps1.clearBatch();
                 ps2.clearBatch();
-                ps3.clearBatch();
+                ps3Update.clearBatch();
+                ps3Insert.clearBatch();
                 ps4.clearBatch();
                 ps5.clearBatch();
 
