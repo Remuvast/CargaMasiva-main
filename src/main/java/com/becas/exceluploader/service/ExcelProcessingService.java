@@ -1076,7 +1076,7 @@ public class ExcelProcessingService {
         java.time.LocalDate end = fin.toLocalDateTime().toLocalDate();
 
         // 🔥 SUMAR 1 DÍA para que sea inclusivo como Excel
-        end = end.plusDays(1);
+        // end = end.plusDays(1);
 
         java.time.Period p = java.time.Period.between(start, end);
 
