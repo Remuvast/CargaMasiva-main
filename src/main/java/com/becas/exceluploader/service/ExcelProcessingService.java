@@ -121,17 +121,24 @@ public class ExcelProcessingService {
                       AND sl.id = so.solicitantes_id
                  """);
 
-                 PreparedStatement ps2 = conn.prepareStatement(""" 
+                 PreparedStatement ps2 = conn.prepareStatement("""
                     UPDATE solicitudes_programas_requisitos spr
                     SET resultado = ?
-                    FROM solicitudes so, solicitantes sl, programas_requisitos pr
+                    FROM solicitudes so,
+                        solicitantes sl,
+                        programas_requisitos pr,
+                        requisitos r,
+                        catalogos c
                     WHERE so.id = spr.solicitudes_id
-                      AND sl.id = so.solicitantes_id
-                      AND spr.programas_requisitos_id = pr.id
-                      AND pr.requisito_obligatorio = false
-                      AND sl.numero_identificacion = ?
-                      AND so.numero_tramite = ?
-                 """);
+                    AND sl.id = so.solicitantes_id
+                    AND spr.programas_requisitos_id = pr.id
+                    AND pr.requisitos_id = r.id
+                    AND r.catalogos_tipos_proceso_id = c.id
+                    AND c.codigo = 'POST'
+                    AND pr.estado = TRUE
+                    AND sl.numero_identificacion = ?
+                    AND so.numero_tramite = ?
+                """);
 
                 PreparedStatement ps3Update = conn.prepareStatement("""
                     UPDATE solicitudes_datos_estudio sde
