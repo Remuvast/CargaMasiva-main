@@ -41,11 +41,11 @@ application-prod.properties
 
 ### No subir archivos de configuración de Pre-Producción ###
 docker-compose.pre.yml
-application-pre.properties
+\src\main\resources\application-pre.properties
 
 ### No subir archivos de configuración de Local ###
 docker-compose.yml
-application.properties
+\src\main\resources\application.properties
 
 ### No subir archivo de configuración ###
 Dockerfile - PRE (aumenta -s settings)
