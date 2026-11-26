@@ -35,17 +35,13 @@ build/
 ### Para descarga de paquetes maven ###
 settings.xml
 
-### No subir archivos de configuración de Producción ###
-docker-compose.prod.yml
-application-prod.properties
-
 ### No subir archivos de configuración de Pre-Producción ###
 docker-compose.pre.yml
-\src\main\resources\application-pre.properties
+/src/main/resources/application-pre.properties
 
 ### No subir archivos de configuración de Local ###
 docker-compose.yml
-\src\main\resources\application.properties
+/src/main/resources/application.properties
 
 ### No subir archivo de configuración ###
 Dockerfile - PRE (aumenta -s settings)
