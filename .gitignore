@@ -40,8 +40,8 @@ docker-compose.prod.yml
 /src/main/resources/application-prod.properties
 
 ### No subir archivos de configuración de Pre-Producción ###
-### docker-compose.pre.yml
-### /src/main/resources/application-pre.properties
+docker-compose.pre.yml
+/src/main/resources/application-pre.properties
 
 ### No subir archivos de configuración de Local ###
 docker-compose.yml
