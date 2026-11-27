@@ -36,8 +36,8 @@ build/
 settings.xml
 
 ### No subir archivos de configuración de Producción ###
-docker-compose.prod.yml
-/src/main/resources/application-prod.properties
+### docker-compose.prod.yml
+### /src/main/resources/application-prod.properties
 
 ### No subir archivos de configuración de Pre-Producción ###
 docker-compose.pre.yml
