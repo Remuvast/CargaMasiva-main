@@ -49,4 +49,4 @@ docker-compose.yml
 
 ### No subir archivo de configuración ###
 Dockerfile - PRE (aumenta -s settings)
-Dockerfile - LOCAL y PROS
+Dockerfile - LOCAL y PRO
