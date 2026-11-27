@@ -9,4 +9,4 @@ services:
       - /data:/data:z
     environment:
       - TZ=America/Guayaquil
-      - SPRING_PROFILES_ACTIVE=pre
+      - SPRING_PROFILES_ACTIVE=prod

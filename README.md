@@ -1,272 +1,469 @@
-# Carga Masiva de Informaci®Æn ®C Plataforma Inform®¢tica PUSAK
 
-Aplicaci®Æn desarrollada en **Spring Boot** para realizar la **carga masiva de informaci®Æn desde archivos Excel** en el m®Ædulo de **Postulaci®Æn de Becas** de la **Plataforma Inform®¢tica PUSAK**.
+# Carga Masiva de Informaci√≥n ‚Äì Plataforma Inform√°tica PUSAK
+
+Aplicaci√≥n desarrollada con **Spring Boot** para realizar la carga y el rechazo masivo de postulaciones mediante archivos Excel en el m√≥dulo de Postulaci√≥n de Becas de la **Plataforma Inform√°tica PUSAK**.
 
 El sistema permite:
 
-- Cargar archivos Excel (`.xlsx`, `.xls`)
-- Validar extensi®Æn y tama?o del archivo
-- Procesar la informaci®Æn en backend
-- Registrar los datos en base de datos PostgreSQL
-- Mostrar mensajes de resultado en interfaz web
+- Cargar archivos Excel (`.xlsx`, `.xls`).
+- Validar la extensi√≥n y el tama√±o de los archivos.
+- Procesar y validar la informaci√≥n en el backend.
+- Registrar la informaci√≥n en la base de datos PostgreSQL.
+- Ejecutar procesos de rechazo masivo de postulaciones.
+- Mostrar mensajes informativos sobre los resultados del procesamiento.
 
 ---
 
-## Descripci®Æn General
+## 1. Descripci√≥n General
 
-La aplicaci®Æn expone una interfaz web construida con **Thymeleaf**, desde donde el usuario puede:
+La aplicaci√≥n expone una interfaz web desarrollada con **Thymeleaf**, desde donde el usuario puede:
 
-- Ingresar al men®≤ principal
-- Acceder al m®Ædulo de **Carga Masiva**
-- Acceder al m®Ædulo de **Rechazo Masivo**
-- Subir archivos Excel para procesamiento
+- Ingresar al men√∫ principal.
+- Acceder al m√≥dulo de **Carga Masiva**.
+- Acceder al m√≥dulo de **Rechazo Masivo**.
+- Seleccionar y procesar archivos Excel.
 
-El sistema est®¢ preparado para ejecutarse en:
+La aplicaci√≥n est√° preparada para ejecutarse en tres ambientes:
 
-- **Ambiente local**
-- **Ambiente de preproducci®Æn**
+- **Local:** desarrollo y pruebas locales.
+- **Preproducci√≥n (PRE):** validaci√≥n funcional y t√©cnica previa al despliegue.
+- **Producci√≥n (PRO):** operaci√≥n institucional.
 
-mediante perfiles de configuraci®Æn de **Spring Boot**.
-
----
-
-## Tecnolog®™as Utilizadas
-
-- **Java 17**
-- **Spring Boot 3.4.5**
-- **Spring Data JPA**
-- **Spring Web**
-- **Thymeleaf**
-- **Apache POI**
-- **PostgreSQL**
-- **Docker**
-- **Docker Compose**
-- **Maven**
+La separaci√≥n de ambientes se realiza mediante perfiles de configuraci√≥n de Spring Boot y archivos Docker Compose independientes.
 
 ---
 
-## Estructura General del Proyecto
+## 2. Tecnolog√≠as Utilizadas
 
+- Java 17
+- Spring Boot 3.4.5
+- Spring Data JPA
+- Spring Web
+- Thymeleaf
+- Apache POI
+- PostgreSQL
+- Docker
+- Docker Compose
+- Maven
+
+---
+
+## 3. Estructura General del Proyecto
+
+```text
 CargaMasiva-main/
-©¿©§©§ src/
-©¶   ©¿©§©§ main/
-©¶   ©¶   ©¿©§©§ java/
-©¶   ©¶   ©∏©§©§ resources/
-©¶   ©¶       ©¿©§©§ static/
-©¶   ©¶       ©¶   ©∏©§©§ images/
-©¶   ©¶       ©¿©§©§ templates/
-©¶   ©¶       ©¶   ©¿©§©§ fragments/
-©¶   ©¶       ©¶   ©¿©§©§ CargaInformacion.html
-©¶   ©¶       ©¶   ©¿©§©§ IndexCargaInformacion.html
-©¶   ©¶       ©¶   ©∏©§©§ RechazoInformacion.html
-©¶   ©¶       ©¿©§©§ application.properties
-©¶   ©¶       ©∏©§©§ application-pre.properties
-©¶   ©∏©§©§ test/
-©¿©§©§ Dockerfile
-©¿©§©§ docker-compose.yml
-©¿©§©§ docker-compose.pre.yml
-©¿©§©§ Makefile
-©∏©§©§ pom.xml
+‚îÇ
+‚îú‚îÄ‚îÄ src/
+‚îÇ   ‚îú‚îÄ‚îÄ main/
+‚îÇ   ‚îÇ   ‚îú‚îÄ‚îÄ java/
+‚îÇ   ‚îÇ   ‚îî‚îÄ‚îÄ resources/
+‚îÇ   ‚îÇ       ‚îú‚îÄ‚îÄ static/
+‚îÇ   ‚îÇ       ‚îÇ   ‚îî‚îÄ‚îÄ images/
+‚îÇ   ‚îÇ       ‚îú‚îÄ‚îÄ templates/
+‚îÇ   ‚îÇ       ‚îÇ   ‚îî‚îÄ‚îÄ fragments/
+‚îÇ   ‚îÇ       ‚îî‚îÄ‚îÄ application.properties
+‚îÇ   ‚îÇ
+‚îÇ   ‚îî‚îÄ‚îÄ test/
+‚îÇ
+‚îú‚îÄ‚îÄ Dockerfile
+‚îú‚îÄ‚îÄ pom.xml
+‚îú‚îÄ‚îÄ Makefile
+‚îî‚îÄ‚îÄ README.md
+```
 
+**Nota:** Los archivos de configuraci√≥n espec√≠ficos de PRE y PRO se administran externamente al repositorio, para evitar publicar par√°metros internos y credenciales de conexi√≥n.
 
+---
 
-## Configuraci®Æn de Ambientes
-## Ambiente Local
+## 4. Configuraci√≥n de Ambientes
 
-Archivo:
+La aplicaci√≥n utiliza perfiles de Spring Boot para seleccionar la configuraci√≥n correspondiente a cada ambiente.
 
+### 4.1. Ambiente Local
+
+Perfil: `default`
+
+Archivo base:
+
+```text
 src/main/resources/application.properties
+```
 
-**Configuraci®Æn principal:**
+Configuraci√≥n principal:
 
-Puerto: 8083
-Base de datos local
-Directorio de carga local
-URL de login local
+- Puerto de aplicaci√≥n: 8083.
+- Conexi√≥n a base de datos local.
+- Directorio local para almacenamiento de archivos.
+- URL de acceso local.
 
+### 4.2. Ambiente de Preproducci√≥n (PRE)
 
-## Ambiente Preproducci®Æn
+Perfil: `pre`
 
-Archivo:
+Archivo de configuraci√≥n externo:
 
-src/main/resources/application-pre.properties
+```text
+application-pre.properties
+```
 
-Se activa mediante:
+Activaci√≥n del perfil:
 
+```bash
 SPRING_PROFILES_ACTIVE=pre
+```
 
-**Configuraci®Æn principal:**
+Configuraci√≥n principal:
 
-Base de datos de preproducci®Æn
-Ruta Linux para archivos cargados
-URL de login de ambiente PUSAK TEST
-Ejecuci®Æn en Ambiente Local
-**1. Compilar el proyecto
+- Conexi√≥n a la base de datos de preproducci√≥n.
+- Directorio Linux para almacenamiento de archivos.
+- URL de acceso al ambiente PUSAK TEST.
+- Par√°metros de autenticaci√≥n correspondientes al ambiente de pruebas.
+
+El archivo de configuraci√≥n debe estar disponible en la ubicaci√≥n definida para el despliegue.
+
+### 4.3. Ambiente de Producci√≥n (PRO)
+
+Perfil: `prod`
+
+Archivo de configuraci√≥n externo:
+
+```text
+application-prod.properties
+```
+
+Activaci√≥n del perfil:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod
+```
+
+Configuraci√≥n principal:
+
+- Conexi√≥n a la base de datos de Producci√≥n.
+- Directorio Linux para almacenamiento de archivos.
+- URL de acceso al ambiente de Producci√≥n de Servicios PUSAK.
+- Par√°metros de autenticaci√≥n correspondientes al ambiente productivo.
+
+El archivo `application-prod.properties` debe estar disponible en el servidor de Producci√≥n y mantenerse fuera del repositorio.
+
+**Importante:** Las credenciales, contrase√±as, tokens y secretos deben administrarse mediante mecanismos seguros y no deben incorporarse al c√≥digo fuente ni publicarse en Git.
+
+---
+
+## 5. Compilaci√≥n y Ejecuci√≥n
+
+### 5.1. Ejecuci√≥n en Ambiente Local
+
+**1. Compilar el proyecto**
+
+```bash
 mvn clean package -DskipTests
-**2. Ejecutar con Docker
-docker-compose up --build
-**3. Acceder al sistema
+```
 
-Men®≤ principal:
+**2. Construir y levantar el contenedor**
 
+```bash
+docker compose up --build -d
+```
+
+**3. Acceder al sistema**
+
+Men√∫ principal:
+
+```text
 http://localhost:8083/menu
+```
 
 Carga masiva:
 
+```text
 http://localhost:8083/carga
+```
 
-**Ejecuci®Æn en Preproducci®Æn**
+**4. Consultar los registros**
 
-Utilizar:
+```bash
+docker compose logs -f
+```
 
-docker-compose -f docker-compose.pre.yml up --build
+**5. Detener el contenedor**
 
-Este despliegue utiliza autom®¢ticamente el perfil:
+```bash
+docker compose down
+```
 
-pre
+### 5.2. Ejecuci√≥n en Preproducci√≥n (PRE)
 
-**Uso del Sistema**
-Men®≤ principal
+Utilizar el archivo Docker Compose correspondiente al ambiente:
 
-Desde la pantalla inicial el usuario puede seleccionar:
+```bash
+docker compose -f docker-compose.pre.yml up --build -d
+```
 
-Carga Masiva
-Rechazo Masivo
-Carga Masiva
+Este despliegue activa el perfil:
+
+```bash
+SPRING_PROFILES_ACTIVE=pre
+```
+
+El servidor debe disponer del archivo externo `application-pre.properties` y de los par√°metros de conexi√≥n correspondientes a PRE.
+
+### 5.3. Ejecuci√≥n en Producci√≥n (PRO)
+
+Utilizar el archivo Docker Compose correspondiente al ambiente:
+
+```bash
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+Este despliegue activa el perfil:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod
+```
+
+El servidor debe disponer del archivo externo `application-prod.properties`, con los par√°metros correspondientes a Producci√≥n.
+
+La ubicaci√≥n del archivo de configuraci√≥n debe coincidir con la ruta definida en el volumen de `docker-compose.prod.yml`.
+
+**Nota:** La ejecuci√≥n del despliegue en Producci√≥n debe realizarse por personal autorizado, previa aprobaci√≥n del procedimiento t√©cnico correspondiente.
+
+---
+
+## 6. Uso del Sistema
+
+### 6.1. Men√∫ Principal
+
+Desde la pantalla inicial, el usuario puede seleccionar:
+
+- Carga Masiva.
+- Rechazo Masivo.
+
+### 6.2. Carga Masiva
 
 Flujo de uso:
 
-Ingresar al m®Ædulo
-Seleccionar archivo Excel
-Presionar Subir y Procesar
-Esperar validaci®Æn y procesamiento
-Revisar resultado mostrado en pantalla
-Validaciones de Archivo
+1. Ingresar al m√≥dulo de Carga Masiva.
+2. Seleccionar el archivo Excel.
+3. Presionar el bot√≥n **Subir y Procesar**.
+4. Esperar la validaci√≥n y el procesamiento de la informaci√≥n.
+5. Revisar el resultado mostrado en pantalla.
 
-El sistema valida en frontend:
+### 6.3. Rechazo Masivo
 
-Extensiones permitidas
-.xlsx
-.xls
-Tama?o m®¢ximo
-20 MB
+Flujo de uso:
 
-Si el archivo no cumple las reglas, se bloquea el env®™o y se muestra mensaje de validaci®Æn.
+1. Ingresar al m√≥dulo de Rechazo Masivo.
+2. Seleccionar el archivo correspondiente.
+3. Ejecutar el proceso de rechazo.
+4. Revisar el resultado del procesamiento.
 
-**Ubicaci®Æn de Archivos Subidos**
-Local
+---
+
+## 7. Validaciones de Archivos
+
+El sistema contempla las siguientes validaciones:
+
+**Extensiones permitidas:**
+
+- `.xlsx`
+- `.xls`
+
+**Tama√±o m√°ximo permitido:**
+
+- 20 MB.
+
+Si el archivo no cumple las condiciones establecidas, se bloquea el env√≠o y se muestra el mensaje de validaci√≥n correspondiente.
+
+Las validaciones del procesamiento se realizan en el backend.
+
+Si se identifican errores durante la validaci√≥n de los registros, el sistema muestra los errores en pantalla y no guarda los registros del archivo procesado.
+
+---
+
+## 8. Ubicaci√≥n de Archivos Subidos
+
+Los archivos procesados se almacenan f√≠sicamente en el servidor, mediante vol√∫menes Docker.
+
+### Ambiente Local
+
+Directorio dentro del contenedor:
+
+```text
 /app/data/archivos_subidos_carga_masiva
+```
 
-Mapeado desde Docker hacia la carpeta local definida en:
+La ruta f√≠sica del equipo local se define mediante el volumen configurado en Docker Compose.
 
-docker-compose.yml
-Preproducci®Æn
+### Ambiente de Preproducci√≥n
+
+Directorio:
+
+```text
 /data/archivos_subidos_carga_masiva
+```
 
-**Recursos Visuales**
+### Ambiente de Producci√≥n
 
-Las im®¢genes institucionales se encuentran en:
+Directorio:
 
+```text
+/data/archivos_subidos_carga_masiva
+```
+
+En PRE y PRO se utiliza el volumen Docker correspondiente para mantener los archivos almacenados fuera del ciclo de vida del contenedor.
+
+Se debe verificar que el usuario que ejecuta la aplicaci√≥n tenga permisos de escritura en el directorio correspondiente.
+
+---
+
+## 9. Recursos Visuales
+
+Las im√°genes institucionales se encuentran en:
+
+```text
 src/main/resources/static/images/
+```
 
-Archivos actuales:
+Archivos utilizados:
 
-logoizquierda.jpg
-logoderecha.jpg
-piederecha.png
+- `logoizquierda.jpg`
+- `logoderecha.jpg`
+- `piederecha.png`
 
-Se utilizan en los fragmentos:
+Se utilizan en los siguientes fragmentos:
 
+```text
 templates/fragments/header.html
 templates/fragments/footer.html
+```
 
-## Docker
-**Dockerfile**
+---
 
-El proyecto usa construcci®Æn por etapas:
+## 10. Docker
 
-Etapa 1
+### 10.1. Dockerfile
 
-Compilaci®Æn con Maven
+El proyecto utiliza Docker para construir y ejecutar la aplicaci√≥n.
 
-Etapa 2
+La construcci√≥n se realiza mediante dos etapas:
 
-Ejecuci®Æn con Java 17
+**Etapa 1: Construcci√≥n**
 
-Puerto expuesto:
+- Compilaci√≥n del proyecto con Maven.
+- Generaci√≥n del archivo ejecutable JAR.
 
-8083
+**Etapa 2: Ejecuci√≥n**
 
-**Docker Compose**
-**Local**
+- Ejecuci√≥n de la aplicaci√≥n con Java 17.
+- Exposici√≥n del puerto 8083.
 
-Archivo:
+### 10.2. Docker Compose
 
-docker-compose.yml
+Se utilizan archivos independientes para configurar cada ambiente:
 
-Contenedor:
+| Ambiente | Archivo | Perfil |
+|---|---|---|
+| Local | `docker-compose.yml` | default |
+| Preproducci√≥n | `docker-compose.pre.yml` | pre |
+| Producci√≥n | `docker-compose.prod.yml` | prod |
 
-springboot-excel
-Preproducci®Æn
+Los archivos de configuraci√≥n espec√≠ficos de cada ambiente deben mantenerse fuera del repositorio.
 
-Archivo:
+### 10.3. Comandos √∫tiles
 
-docker-compose.pre.yml
+**Consultar contenedores activos:**
 
-Contenedor:
+```bash
+docker ps
+```
 
-springboot-excel-pre
-Comandos ®≤tiles
-Levantar contenedor local
-docker-compose up --build
-Detener contenedor
-docker-compose down
-Ver logs
-docker-compose logs -f
+**Consultar registros de la aplicaci√≥n:**
 
-**Levantar preproducci®Æn**
-docker-compose -f docker-compose.pre.yml up --build
-Makefile
+```bash
+docker logs -f springboot-excel
+```
 
-El proyecto incluye automatizaci®Æn b®¢sica mediante Makefile.
+**Reconstruir y levantar el ambiente local:**
 
-Comandos disponibles
-Construcci®Æn
-make build
-Levantar contenedor
-make up
-Detener contenedor
-make down
-Reiniciar
-make restart
-Ver logs
-make logs
-Estado de contenedores
-make ps
-Limpieza
-make clean
+```bash
+docker compose up --build -d
+```
 
-## Base de Datos
+**Detener los servicios locales:**
+
+```bash
+docker compose down
+```
+
+---
+
+## 11. Makefile
+
+El proyecto incluye automatizaci√≥n b√°sica mediante Makefile.
+
+Comandos disponibles:
+
+| Comando | Descripci√≥n |
+|---|---|
+| `make build` | Construcci√≥n del proyecto |
+| `make up` | Levantar el contenedor |
+| `make down` | Detener el contenedor |
+| `make restart` | Reiniciar el servicio |
+| `make logs` | Consultar registros |
+| `make ps` | Consultar estado de contenedores |
+| `make clean` | Limpieza de recursos |
+
+---
+
+## 12. Base de Datos
+
 **Motor utilizado:**
 
-PostgreSQL
+PostgreSQL.
 
-**Configurado mediante:**
+La conexi√≥n se configura mediante las siguientes propiedades:
 
+```properties
 spring.datasource.url
 spring.datasource.username
 spring.datasource.password
-Observaciones T®¶cnicas
-El frontend est®¢ construido con Thymeleaf
-Los archivos Excel son procesados con Apache POI
-El sistema utiliza Spring Boot multipart upload
-El proyecto soporta separaci®Æn de configuraci®Æn por perfiles
-Las cargas quedan persistidas f®™sicamente en disco
-Recomendaciones de Despliegue
+```
 
-Antes de pasar a preproducci®Æn se recomienda verificar:
+Los par√°metros de conexi√≥n deben corresponder al ambiente en el que se ejecuta la aplicaci√≥n.
 
-Acceso a base de datos
-Permisos de escritura en /data
-Disponibilidad del puerto 8083
-Correcta resoluci®Æn de URL del sistema PUSAK
+Las credenciales deben administrarse de manera segura y no deben publicarse en el repositorio.
+
+---
+
+## 13. Observaciones T√©cnicas
+
+- El frontend est√° desarrollado con Thymeleaf.
+- Los archivos Excel son procesados mediante Apache POI.
+- La aplicaci√≥n utiliza Spring Boot para la gesti√≥n de solicitudes y carga de archivos.
+- La persistencia de informaci√≥n se realiza mediante Spring Data JPA.
+- La base de datos utilizada es PostgreSQL.
+- La aplicaci√≥n soporta separaci√≥n de configuraciones mediante perfiles de Spring Boot.
+- Los archivos cargados se almacenan f√≠sicamente en el servidor mediante vol√∫menes Docker.
+- La ejecuci√≥n se realiza mediante contenedores Docker.
+
+---
+
+## 14. Recomendaciones de Despliegue
+
+Antes de ejecutar un despliegue en cualquiera de los ambientes, se recomienda verificar:
+
+- Disponibilidad del servidor.
+- Disponibilidad del puerto 8083.
+- Correcta configuraci√≥n del perfil Spring Boot.
+- Existencia y validez del archivo de configuraci√≥n correspondiente.
+- Acceso a la base de datos.
+- Correcta resoluci√≥n de la URL de Servicios PUSAK.
+- Configuraci√≥n de autenticaci√≥n e integraci√≥n.
+- Permisos de lectura y escritura en los directorios correspondientes.
+- Disponibilidad de espacio en disco.
+- Correcta construcci√≥n y ejecuci√≥n del contenedor Docker.
+- Respaldo de la versi√≥n anterior.
+- Disponibilidad del procedimiento de reversa (rollback).
+
+Para el ambiente de Producci√≥n, el despliegue debe ejecutarse conforme al Est√°ndar de Ejecuci√≥n aprobado y bajo la responsabilidad del personal autorizado.
